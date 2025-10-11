@@ -1,3 +1,4 @@
+
 pluginManagement {
     repositories {
         google()
@@ -15,4 +16,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Plant_application"
 include(":app")
- 

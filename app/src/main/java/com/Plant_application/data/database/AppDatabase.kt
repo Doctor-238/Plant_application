@@ -5,7 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [PlantItem::class, PlantAlarm::class], version = 2, exportSchema = false) // version 변경 및 PlantAlarm 추가
+// PlantAlarm 엔티티는 아직 사용하지 않으므로 데이터베이스 스키마에서 제외합니다.
+@Database(entities = [PlantItem::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun plantDao(): PlantDao
@@ -21,7 +22,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "plant_database"
                 )
-                    .fallbackToDestructiveMigration() // 버전 변경 시 기존 데이터 삭제
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

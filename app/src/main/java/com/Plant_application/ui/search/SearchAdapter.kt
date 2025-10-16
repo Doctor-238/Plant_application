@@ -1,4 +1,4 @@
-package com.Plant_application.ui.home
+package com.Plant_application.ui.search
 
 import android.net.Uri
 import android.view.LayoutInflater
@@ -11,27 +11,25 @@ import com.Plant_application.databinding.ItemPlantBinding
 import com.bumptech.glide.Glide
 import java.io.File
 
-class PlantAdapter : ListAdapter<PlantItem, PlantAdapter.PlantViewHolder>(DiffCallback) {
+class SearchAdapter : ListAdapter<PlantItem, SearchAdapter.SearchViewHolder>(DiffCallback) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchViewHolder {
         val binding = ItemPlantBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PlantViewHolder(binding)
+        return SearchViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: PlantViewHolder, position: Int) {
-        val plant = getItem(position)
-        holder.itemView.setOnClickListener { onItemClicked(plant) }
-        holder.bind(plant)
+    override fun onBindViewHolder(holder: SearchViewHolder, position: Int) {
+        holder.bind(getItem(position))
     }
 
-    class PlantViewHolder(private val binding: ItemPlantBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(plantItem: PlantItem) {
-            binding.tvPlantNickname.text = plantItem.nickname
-            binding.tvPlantOfficialName.text = plantItem.officialName
-            binding.tvWateringInfo.text = "물주기: ${plantItem.wateringCycle}"
+    class SearchViewHolder(private val binding: ItemPlantBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(plant: PlantItem) {
+            binding.tvPlantNickname.text = plant.nickname
+            binding.tvPlantOfficialName.text = plant.officialName
+            binding.tvWateringInfo.text = "물주기: ${plant.wateringCycle}"
 
             Glide.with(itemView.context)
-                .load(Uri.fromFile(File(plantItem.imageUri)))
+                .load(Uri.fromFile(File(plant.imageUri)))
                 .into(binding.ivPlantImage)
         }
     }
@@ -41,7 +39,6 @@ class PlantAdapter : ListAdapter<PlantItem, PlantAdapter.PlantViewHolder>(DiffCa
             override fun areItemsTheSame(oldItem: PlantItem, newItem: PlantItem): Boolean {
                 return oldItem.id == newItem.id
             }
-
             override fun areContentsTheSame(oldItem: PlantItem, newItem: PlantItem): Boolean {
                 return oldItem == newItem
             }

@@ -12,7 +12,7 @@ data class PlantItem(
     val imageUri: String,
     val wateringCycle: String, // 물 주기
     val pesticideCycle: String, // 살충제 주기
-    val health: Float, // 건강 여부 (별점)
+    val healthRating: Float, // 건강 여부 (별점 0.0 ~ 5.0)
     val tempRange: String, // 적정 온도 범위
     val lifespan: String, // 수명
     val timestamp: Long = System.currentTimeMillis()

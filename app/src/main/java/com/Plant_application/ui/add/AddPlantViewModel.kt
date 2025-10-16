@@ -7,9 +7,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.Plant_application.R
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.PlantItem
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.GenerationConfig
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,10 +53,14 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         _originalBitmap.value = bitmap
         hasChanges.value = true
 
-        // 오류가 발생한 responseMimeType 설정 부분을 삭제했습니다.
+        val config = GenerationConfig.Builder().apply {
+            responseMimeType = "application/json"
+        }.build()
+
         generativeModel = GenerativeModel(
             modelName = "gemini-pro-vision",
-            apiKey = apiKey
+            apiKey = apiKey,
+            generationConfig = config
         )
 
         _isAiAnalyzing.value = true
@@ -74,13 +80,21 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun setInitialAnalysis(analysis: PlantAnalysis) {
+        if (_analysisResult.value == null) {
+            _analysisResult.value = analysis
+            hasChanges.value = true // 변경 사항이 있음을 알림
+        }
+    }
+
     private suspend fun analyzeImage(bitmap: Bitmap): PlantAnalysis? {
         return withContext(Dispatchers.IO) {
             try {
+                // AI 프롬프트를 요구사항에 맞게 상세하고 명확하게 수정
                 val inputContent = content {
                     image(bitmap)
                     text("""
-                        You are an expert botanist. Analyze the plant in the image and provide a detailed analysis in a strict JSON format.
+                        You are an expert botanist. Analyze the plant in the image and provide a detailed analysis in a strict JSON format without any markdown.
                         Your JSON response MUST contain ONLY the following keys: "is_plant", "official_name", "health_rating", "watering_cycle", "pesticide_cycle", "temp_range", "lifespan".
 
                         - "is_plant": (boolean) True if the image contains a plant, otherwise false.
@@ -94,10 +108,8 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                 }
 
                 val response = generativeModel!!.generateContent(inputContent)
-                // JSON 응답을 파싱하기 전에 텍스트에서 ```json ``` 마크다운을 제거합니다.
-                val cleanedJson = response.text!!.removePrefix("```json\n").removeSuffix("\n```")
                 val json = Json { ignoreUnknownKeys = true }
-                json.decodeFromString<PlantAnalysis>(cleanedJson)
+                json.decodeFromString<PlantAnalysis>(response.text!!)
             } catch (e: Exception) {
                 Log.e("AddPlantViewModel", "AI analysis failed", e)
                 null
@@ -127,7 +139,7 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                     imageUri = imagePath,
                     wateringCycle = analysis.watering_cycle ?: "N/A",
                     pesticideCycle = analysis.pesticide_cycle ?: "N/A",
-                    health = analysis.health_rating ?: 0.0f,
+                    healthRating = analysis.health_rating ?: 0.0f,
                     tempRange = analysis.temp_range ?: "N/A",
                     lifespan = analysis.lifespan ?: "N/A"
                 )

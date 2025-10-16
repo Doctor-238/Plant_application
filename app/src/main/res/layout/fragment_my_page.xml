@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
+    android:padding="16dp"
     tools:context=".ui.mypage.MyPageFragment">
 
     <TextView
@@ -15,10 +16,10 @@
         android:textStyle="bold" />
 
     <Button
-        android:id="@+id/btn_logout"
+        android:id="@+id/btn_reset_app"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="로그아웃" />
+        android:layout_marginTop="32dp"
+        android:text="앱 전체 데이터 초기화" />
 
 </LinearLayout>

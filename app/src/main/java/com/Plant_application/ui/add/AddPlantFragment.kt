@@ -36,11 +36,13 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
     private val binding get() = _binding!!
 
     private val viewModel: AddPlantViewModel by viewModels()
+    private val args: AddPlantFragmentArgs by navArgs()
 
     private lateinit var onBackPressedCallback: OnBackPressedCallback
     private var toast: Toast? = null
     private var tempImageUri: Uri? = null
 
+    // 카메라 앱 결과 콜백
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             tempImageUri?.let { uri ->
@@ -54,6 +56,7 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
         }
     }
 
+    // 갤러리 앱 결과 콜백
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             val bitmap = getCorrectlyOrientedBitmap(it)
@@ -69,12 +72,19 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddPlantBinding.bind(view)
 
+        // 전달받은 인자가 있다면 ViewModel 상태 초기화
+        args.plantAnalysis?.let { analysis ->
+            viewModel.setInitialAnalysis(analysis)
+            binding.textViewPlaceholder.text = "추천받은 식물의 사진을 추가해주세요!"
+        }
+
         setupListeners()
         setupBackButtonHandler()
         observeViewModel()
     }
 
     private fun observeViewModel() {
+        // AI 분석 중 상태 관찰
         viewModel.isAiAnalyzing.observe(viewLifecycleOwner) { isAnalyzing ->
             binding.progressBar.isVisible = isAnalyzing
             binding.buttonSave.isEnabled = !isAnalyzing && viewModel.originalBitmap.value != null && !binding.editTextPlantNickname.text.isNullOrBlank()
@@ -83,10 +93,12 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             }
         }
 
+        // 저장 중 상태 관찰
         viewModel.isSaving.observe(viewLifecycleOwner) { isSaving ->
             binding.savingOverlay.isVisible = isSaving
         }
 
+        // 원본 이미지 비트맵 관찰
         viewModel.originalBitmap.observe(viewLifecycleOwner) { bitmap ->
             if (bitmap != null) {
                 binding.textViewPlaceholder.isVisible = false
@@ -100,24 +112,27 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             }
         }
 
+        // AI 분석 결과 관찰
         viewModel.analysisResult.observe(viewLifecycleOwner) { result ->
             binding.cardAiInfo.isVisible = result != null
             if (result != null) {
-                binding.tvInfoOfficialName.text = "공식 이름: ${result.official_name ?: "N/A"}"
+                binding.tvInfoOfficialName.text = "공식 이름: ${result.official_name ?: "정보 없음"}"
                 binding.tvInfoHealth.text = "건강 상태: ${"★".repeat(result.health_rating?.toInt() ?: 0)}${"☆".repeat(5 - (result.health_rating?.toInt() ?: 0))}"
-                binding.tvInfoWatering.text = "물 주기: ${result.watering_cycle ?: "N/A"}"
-                binding.tvInfoPesticide.text = "살충제: ${result.pesticide_cycle ?: "N/A"}"
-                binding.tvInfoTemp.text = "적정 온도: ${result.temp_range ?: "N/A"}"
-                binding.tvInfoLifespan.text = "예상 수명: ${result.lifespan ?: "N/A"}"
+                binding.tvInfoWatering.text = "물 주기: ${result.watering_cycle ?: "정보 없음"}"
+                binding.tvInfoPesticide.text = "살충제: ${result.pesticide_cycle ?: "정보 없음"}"
+                binding.tvInfoTemp.text = "적정 온도: ${result.temp_range ?: "정보 없음"}"
+                binding.tvInfoLifespan.text = "예상 수명: ${result.lifespan ?: "정보 없음"}"
             }
         }
 
+        // 저장 완료 상태 관찰
         viewModel.isSaveCompleted.observe(viewLifecycleOwner) { isCompleted ->
             if (isCompleted) {
                 findNavController().popBackStack()
             }
         }
 
+        // 오류 메시지 관찰
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             if (!message.isNullOrEmpty()) {
                 showToast(message, Toast.LENGTH_LONG)
@@ -125,6 +140,7 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             }
         }
 
+        // 변경 사항 여부 관찰 (뒤로가기 제어용)
         viewModel.hasChanges.observe(viewLifecycleOwner) { hasChanges ->
             onBackPressedCallback.isEnabled = hasChanges
         }
@@ -171,20 +187,19 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
 
     private fun createTempImageFile(): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val storageDir = requireContext().cacheDir
-        return File(storageDir, "JPEG_${timeStamp}_").apply {
-            createNewFile()
-        }
+        val storageDir = requireContext().cacheDir // 캐시 디렉토리 사용
+        return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
     }
 
+    // 이미지 회전 문제를 해결하는 함수
     private fun getCorrectlyOrientedBitmap(uri: Uri): Bitmap? {
         var inputStream: InputStream? = null
         return try {
             inputStream = requireContext().contentResolver.openInputStream(uri) ?: return null
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close() // First stream closed
+            inputStream.close()
 
-            inputStream = requireContext().contentResolver.openInputStream(uri) ?: return originalBitmap // Re-open
+            inputStream = requireContext().contentResolver.openInputStream(uri) ?: return originalBitmap
             val exifInterface = ExifInterface(inputStream)
             val orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
             val matrix = Matrix()
@@ -208,6 +223,7 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             showToast("식물 별명을 입력해주세요.")
             return
         }
+        // 키보드 숨기기
         val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
         imm?.hideSoftInputFromWindow(view?.windowToken, 0)
         viewModel.savePlant(nickname)

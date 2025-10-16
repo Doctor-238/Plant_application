@@ -29,6 +29,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private lateinit var plantAdapter: PlantAdapter
     private var toast: Toast? = null
 
+    // 위치 권한 요청 런처
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -36,8 +37,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         if (isGranted) {
             checkAndRefresh()
         } else {
+            binding.swipeRefreshLayout.isRefreshing = false
             if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
                 showGoToSettingsDialog()
+            } else {
+                showToast("위치 권한이 거부되어 날씨 정보를 가져올 수 없습니다.")
             }
         }
     }
@@ -57,7 +61,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupRecyclerView() {
-        plantAdapter = PlantAdapter()
+        plantAdapter = PlantAdapter { plant ->
+            // 상세 화면으로 이동하는 Action 실행
+            val action = HomeFragmentDirections.actionGlobalToAddPlantFragment() // 수정 필요
+            // findNavController().navigate(action)
+            // TODO: 홈에서 상세화면으로 가는 네비게이션 Action 추가 필요
+        }
         binding.rvPlantList.adapter = plantAdapter
     }
 
@@ -82,7 +91,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         homeViewModel.weatherInfo.observe(viewLifecycleOwner) { weather ->
             if (weather != null) {
                 binding.tvLocation.text = weather.name
-                binding.tvWeatherDesc.text = weather.weather.firstOrNull()?.description ?: ""
+                binding.tvWeatherDesc.text = weather.weather.firstOrNull()?.description?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() } ?: ""
                 binding.tvTemp.text = String.format(Locale.KOREAN, "%.0f°", weather.main.temp)
                 binding.tvFeelsLike.text = String.format(Locale.KOREAN, "체감 %.0f°", weather.main.feels_like)
                 binding.tvHumidity.text = "습도: ${weather.main.humidity}%"

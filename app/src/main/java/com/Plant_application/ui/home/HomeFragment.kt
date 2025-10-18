@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentHomeBinding
 import java.util.Locale
@@ -29,7 +30,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private lateinit var plantAdapter: PlantAdapter
     private var toast: Toast? = null
 
-    // 위치 권한 요청 런처
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -62,10 +62,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun setupRecyclerView() {
         plantAdapter = PlantAdapter { plant ->
-            // 상세 화면으로 이동하는 Action 실행
-            val action = HomeFragmentDirections.actionGlobalToAddPlantFragment() // 수정 필요
-            // findNavController().navigate(action)
-            // TODO: 홈에서 상세화면으로 가는 네비게이션 Action 추가 필요
+            val action = HomeFragmentDirections.actionNavigationHomeToPlantDetailFragment(plant.id)
+            findNavController().navigate(action)
         }
         binding.rvPlantList.adapter = plantAdapter
     }

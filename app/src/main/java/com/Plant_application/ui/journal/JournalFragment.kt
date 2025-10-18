@@ -12,8 +12,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
-import androidx.viewpager2.widget.ViewPager2
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentJournalBinding
 import kotlinx.coroutines.launch
@@ -96,15 +95,14 @@ class JournalFragment : Fragment(R.layout.fragment_journal) {
     }
 
     private fun setupViewPager() {
-        // 이 화면에서는 카테고리 탭이 필요 없으므로 ViewPager만 단일 프래그먼트로 사용합니다.
-        binding.viewPagerJournal.adapter = object : androidx.viewpager2.adapter.FragmentStateAdapter(this) {
+        binding.viewPagerJournal.adapter = object : FragmentStateAdapter(this) {
             override fun getItemCount(): Int = 1
             override fun createFragment(position: Int): Fragment = PlantListFragment.newInstance()
         }
     }
 
     private fun notifyAdapterPayload(payload: String) {
-        // ViewPager 내의 현재 프래그먼트를 찾아 어댑터에 알림
+        // ViewPager2는 프래그먼트를 다시 생성할 수 있으므로, ID로 찾는 것이 더 안정적입니다.
         val fragment = childFragmentManager.findFragmentByTag("f0")
         (fragment as? PlantListFragment)?.notifyAdapter(payload)
     }

@@ -5,6 +5,7 @@ import android.view.View
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentPlantListBinding
@@ -31,7 +32,8 @@ class PlantListFragment : Fragment(R.layout.fragment_plant_list) {
                 if (viewModel.isDeleteMode.value == true) {
                     viewModel.toggleItemSelection(clickedItem.id)
                 } else {
-                    // TODO: 식물 상세 화면으로 이동
+                    val action = JournalFragmentDirections.actionNavigationJournalToPlantDetailFragment(clickedItem.id)
+                    findNavController().navigate(action)
                 }
             },
             onItemLongClicked = { longClickedItem -> viewModel.enterDeleteMode(longClickedItem.id) },
@@ -53,10 +55,6 @@ class PlantListFragment : Fragment(R.layout.fragment_plant_list) {
         if (::adapter.isInitialized) {
             adapter.notifyItemRangeChanged(0, adapter.itemCount, payload)
         }
-    }
-
-    fun scrollToTop() {
-        binding.recyclerViewPlantList.smoothScrollToPosition(0)
     }
 
     override fun onDestroyView() {

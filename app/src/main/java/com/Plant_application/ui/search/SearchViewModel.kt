@@ -15,7 +15,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _searchQuery = MutableLiveData<String>("")
 
     val searchResults: LiveData<List<PlantItem>> = _searchQuery.switchMap { query ->
-        repository.searchPlantsByName(query)
+        if (query.isBlank()) {
+            MutableLiveData(emptyList())
+        } else {
+            repository.searchPlantsByName(query)
+        }
     }
 
     init {

@@ -1,4 +1,4 @@
-package com.Plant_application.ui.detail
+package com.Plant_application.ui.journal
 
 import android.net.Uri
 import android.os.Bundle

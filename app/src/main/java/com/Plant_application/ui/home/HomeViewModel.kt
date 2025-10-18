@@ -57,7 +57,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refreshData() {
-        // 기존 작업 취소 및 재설정
         cancellationTokenSource.cancel()
         cancellationTokenSource = CancellationTokenSource()
         fetchJob?.cancel()
@@ -80,7 +79,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private suspend fun getFreshLocation(): Location {
-        // getCurrentLocation은 항상 최신 위치를 가져오므로 lastLocation 확인 로직은 제거해도 무방합니다.
         return fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_BALANCED_POWER_ACCURACY,
             cancellationTokenSource.token

@@ -6,19 +6,68 @@
     app:startDestination="@+id/navigation_home">
 
     <fragment
+        android:id="@+id/onboardingFragment"
+        android:name="com.Plant_application.ui.onboarding.OnboardingFragment"
+        android:label="fragment_onboarding"
+        tools:layout="@layout/fragment_onboarding">
+        <action
+            android:id="@+id/action_onboardingFragment_to_addPlantFragment"
+            app:destination="@id/addPlantFragment"
+            app:popUpTo="@id/mobile_navigation"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.Plant_application.ui.home.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_navigation_home_to_plantDetailFragment"
+            app:destination="@id/plantDetailFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/navigation_journal"
         android:name="com.Plant_application.ui.journal.JournalFragment"
         android:label="fragment_journal"
-        tools:layout="@layout/fragment_journal" >
+        tools:layout="@layout/fragment_journal">
         <action
             android:id="@+id/action_navigation_journal_to_plantDetailFragment"
             app:destination="@id/plantDetailFragment" />
     </fragment>
 
     <fragment
+        android:id="@+id/navigation_search"
+        android:name="com.Plant_application.ui.search.SearchFragment"
+        android:label="fragment_search"
+        tools:layout="@layout/fragment_search" />
+
+    <fragment
+        android:id="@+id/navigation_mypage"
+        android:name="com.Plant_application.ui.mypage.MyPageFragment"
+        android:label="fragment_my_page"
+        tools:layout="@layout/fragment_my_page" />
+
+    <fragment
+        android:id="@+id/addPlantFragment"
+        android:name="com.Plant_application.ui.add.AddPlantFragment"
+        android:label="fragment_add_plant"
+        tools:layout="@layout/fragment_add_plant">
+        <argument
+            android:name="plantAnalysis"
+            app:argType="com.Plant_application.ui.add.PlantAnalysis"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_addPlantFragment"
+        app:destination="@id/addPlantFragment" />
+
+    <fragment
         android:id="@+id/plantDetailFragment"
-        android:name="com.Plant_application.ui.detail.PlantDetailFragment"
-        android:label="fragment_plant_detail"
+        android:name="com.Plant_application.ui.journal.PlantDetailFragment"
+        android:label="PlantDetailFragment"
         tools:layout="@layout/fragment_plant_detail">
         <argument
             android:name="plantId"
@@ -30,8 +79,8 @@
 
     <fragment
         android:id="@+id/editPlantFragment"
-        android:name="com.Plant_application.ui.edit.EditPlantFragment"
-        android:label="fragment_edit_plant"
+        android:name="com.Plant_application.ui.journal.EditPlantFragment"
+        android:label="EditPlantFragment"
         tools:layout="@layout/fragment_edit_plant">
         <argument
             android:name="plantId"

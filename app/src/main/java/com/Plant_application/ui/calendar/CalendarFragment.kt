@@ -29,15 +29,16 @@ class CalendarFragment : Fragment(R.layout.fragment_calendar) {
 
     private fun setupRecyclerView() {
         todoAdapter = TodoAdapter()
-        binding.rvTodoList.adapter = todoAdapter
-        binding.rvTodoList.layoutManager = LinearLayoutManager(context)
+        binding.root.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rv_todo_list).apply {
+            adapter = todoAdapter
+            layoutManager = LinearLayoutManager(context)
+        }
     }
 
     private fun setupCalendarView() {
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             viewModel.onDateSelected(year, month, dayOfMonth)
         }
-        // 오늘 날짜로 초기 선택
         val today = Calendar.getInstance()
         viewModel.onDateSelected(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH))
     }
@@ -45,12 +46,11 @@ class CalendarFragment : Fragment(R.layout.fragment_calendar) {
     private fun observeViewModel() {
         viewModel.selectedDateTodos.observe(viewLifecycleOwner) { todos ->
             todoAdapter.submitList(todos)
-            binding.tvEmptyTodo.isVisible = todos.isEmpty()
+            binding.root.findViewById<android.widget.TextView>(R.id.tv_empty_todo).isVisible = todos.isEmpty()
         }
 
-        // 할 일이 있는 날짜를 캘린더에 표시하는 로직 (Decorator - 추후 구현)
         viewModel.allTodoItems.observe(viewLifecycleOwner) { todoMap ->
-            // TODO: CalendarView Decorator를 사용하여 todoMap의 key(날짜)에 해당하는 날들에 하이라이트 표시
+            // TODO: CalendarView Decorator
         }
     }
 

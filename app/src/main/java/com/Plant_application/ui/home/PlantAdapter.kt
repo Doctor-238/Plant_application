@@ -11,7 +11,7 @@ import com.Plant_application.databinding.ItemPlantBinding
 import com.bumptech.glide.Glide
 import java.io.File
 
-class PlantAdapter : ListAdapter<PlantItem, PlantAdapter.PlantViewHolder>(DiffCallback) {
+class PlantAdapter(private val onItemClicked: (PlantItem) -> Unit) : ListAdapter<PlantItem, PlantAdapter.PlantViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantViewHolder {
         val binding = ItemPlantBinding.inflate(LayoutInflater.from(parent.context), parent, false)

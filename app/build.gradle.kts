@@ -1,10 +1,10 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
-    id("kotlin-parcelize")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("androidx.navigation.safeargs.kotlin")
+    id("kotlin-kapt") // Room, Glide 등 어노테이션 프로세서 실행
+    id("kotlin-parcelize") // @Parcelize 어노테이션 사용
+    id("kotlinx-serialization") // Kotlin 직렬화 라이브러리
+    id("androidx.navigation.safeargs.kotlin") // Navigation Safe Args
 }
 
 android {
@@ -37,11 +37,19 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    // 데이터 바인딩 활성화
     buildFeatures {
+        dataBinding = true
         viewBinding = true
     }
-}
 
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")

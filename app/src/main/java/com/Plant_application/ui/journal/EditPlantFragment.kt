@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -38,9 +39,16 @@ class EditPlantFragment : Fragment(R.layout.fragment_edit_plant) {
         _binding = FragmentEditPlantBinding.bind(view)
 
         viewModel.loadPlant(args.plantId)
+        setupToolbar()
         setupListeners()
         setupBackButtonHandler()
         observeViewModel()
+    }
+
+    private fun setupToolbar() {
+        (activity as AppCompatActivity).setSupportActionBar(binding.toolbarEdit)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.toolbarEdit.setNavigationOnClickListener { handleBackButton() }
     }
 
     private fun observeViewModel() {
@@ -60,12 +68,12 @@ class EditPlantFragment : Fragment(R.layout.fragment_edit_plant) {
         viewModel.canBeSaved.observe(viewLifecycleOwner) { canBeSaved ->
             val saveMenuItem = binding.toolbarEdit.menu.findItem(R.id.menu_save)
             saveMenuItem?.isEnabled = canBeSaved
-            val title = saveMenuItem.title.toString()
+            val title = saveMenuItem?.title.toString()
             val spannable = SpannableString(title)
             val color = if (canBeSaved) Color.parseColor("#4CAF50") else Color.GRAY
             spannable.setSpan(ForegroundColorSpan(color), 0, spannable.length, 0)
             spannable.setSpan(StyleSpan(Typeface.BOLD), 0, spannable.length, 0)
-            saveMenuItem.title = spannable
+            saveMenuItem?.title = spannable
         }
 
         viewModel.isChanged.observe(viewLifecycleOwner) { hasChanges ->
@@ -79,7 +87,7 @@ class EditPlantFragment : Fragment(R.layout.fragment_edit_plant) {
         }
 
         viewModel.isSaveComplete.observe(viewLifecycleOwner) { isComplete ->
-            if (isComplete) findNavController().popBackStack(R.id.plantDetailFragment, true)
+            if (isComplete) findNavController().popBackStack()
         }
 
         viewModel.isDeleteComplete.observe(viewLifecycleOwner) { isComplete ->
@@ -91,8 +99,6 @@ class EditPlantFragment : Fragment(R.layout.fragment_edit_plant) {
     }
 
     private fun setupListeners() {
-        binding.toolbarEdit.setNavigationOnClickListener { handleBackButton() }
-
         binding.toolbarEdit.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.menu_save -> {

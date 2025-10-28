@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- App Theme Colors -->
+    <color name="primary">#4CAF50</color>
+    <color name="primary_dark">#388E3C</color>
+    <color name="primary_light">#C8E6C9</color>
+    <color name="accent">#8BC34A</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_icons">#FFFFFF</color>
+
+    <!-- Specific Component Colors from Error Log -->
+    <color name="delete_button_red_active">#F44336</color>
+    <color name="delete_button_red_inactive">#BDBDBD</color>
+    <color name="clothing_item_border">#E0E0E0</color> <!-- As per error log, though name is unusual -->
+
+
+    <!-- Other Colors -->
+    <color name="divider">#BDBDBD</color>
+    <color name="background">#F5F5F5</color>
+</resources>
+

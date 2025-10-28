@@ -50,7 +50,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     val config = GenerationConfig.Builder().apply {
                         responseMimeType = "application/json"
                     }.build()
-                    generativeModel = GenerativeModel("gemini-pro", apiKey, generationConfig = config)
+                    generativeModel = GenerativeModel("gemini-2.5-flash", apiKey, generationConfig = config)
                 }
 
                 val prompt = """

@@ -14,17 +14,19 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _searchQuery = MutableLiveData<String>("")
 
-    val searchResults: LiveData<List<PlantItem>> = _searchQuery.switchMap { query ->
-        if (query.isBlank()) {
-            MutableLiveData(emptyList())
-        } else {
-            repository.searchPlantsByName(query)
-        }
-    }
+    val searchResults: LiveData<List<PlantItem>>
 
     init {
         val plantDao = AppDatabase.getDatabase(application).plantDao()
         repository = PlantRepository(plantDao)
+
+        searchResults = _searchQuery.switchMap { query ->
+            if (query.isBlank()) {
+                MutableLiveData(emptyList())
+            } else {
+                repository.searchPlantsByName(query)
+            }
+        }
     }
 
     fun setSearchQuery(query: String) {

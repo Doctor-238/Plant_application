@@ -13,13 +13,15 @@ class PlantDetailViewModel(application: Application) : AndroidViewModel(applicat
     private val repository: PlantRepository
     private val _plantId = MutableLiveData<Int>()
 
-    val plantItem: LiveData<PlantItem> = _plantId.switchMap { id ->
-        repository.getPlantById(id)
-    }
+    val plantItem: LiveData<PlantItem>
 
     init {
         val plantDao = AppDatabase.getDatabase(application).plantDao()
         repository = PlantRepository(plantDao)
+
+        plantItem = _plantId.switchMap { id ->
+            repository.getPlantById(id)
+        }
     }
 
     fun loadPlant(id: Int) {

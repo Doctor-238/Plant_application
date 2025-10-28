@@ -58,7 +58,7 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }.build()
 
         generativeModel = GenerativeModel(
-            modelName = "gemini-pro-vision",
+            modelName = "gemini-2.5-flash",
             apiKey = apiKey,
             generationConfig = config
         )

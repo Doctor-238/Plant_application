@@ -1,7 +1,9 @@
 package com.Plant_application.ui.add
 
 import android.app.Application
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -10,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.Plant_application.R
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.PlantItem
+import com.bumptech.glide.Glide
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerationConfig
 import com.google.ai.client.generativeai.type.content
@@ -117,11 +120,54 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun setRecommendedPlant(analysis: PlantAnalysis, bitmap: Bitmap) {
+    fun setRecommendedPlant(analysis: PlantAnalysis, context: Context) {
+        _isAiAnalyzing.value = true // Use this state for loading
         _analysisResult.value = analysis
-        _originalBitmap.value = bitmap
-        currentBitmap = bitmap
-        _isAiAnalyzing.value = false
+
+        viewModelScope.launch {
+            try {
+                val bitmap = if (analysis.image_url != null) {
+                    downloadBitmap(context, analysis.image_url)
+                } else {
+                    null
+                }
+
+                if (bitmap != null) {
+                    currentBitmap = bitmap
+                    _originalBitmap.postValue(bitmap)
+                } else {
+                    // Fallback to placeholder if download fails or URL is null
+                    Log.w("AddPlantViewModel", "Failed to download image, using placeholder.")
+                    val placeholderBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.plant2)
+                    currentBitmap = placeholderBitmap
+                    _originalBitmap.postValue(placeholderBitmap)
+                }
+
+            } catch (e: Exception) {
+                Log.e("AddPlantViewModel", "Error loading recommended plant image", e)
+                _error.postValue("추천 식물 이미지를 불러오는데 실패했습니다.")
+                val placeholderBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.plant2)
+                currentBitmap = placeholderBitmap
+                _originalBitmap.postValue(placeholderBitmap)
+            } finally {
+                _isAiAnalyzing.postValue(false)
+            }
+        }
+    }
+
+    private suspend fun downloadBitmap(context: Context, url: String): Bitmap? {
+        return withContext(Dispatchers.IO) {
+            try {
+                Glide.with(context)
+                    .asBitmap()
+                    .load(url)
+                    .submit()
+                    .get()
+            } catch (e: Exception) {
+                Log.e("AddPlantViewModel", "Glide download failed", e)
+                null
+            }
+        }
     }
 
     private suspend fun analyzePlantWithAI(bitmap: Bitmap): PlantAnalysis = withContext(Dispatchers.IO) {
@@ -137,6 +183,8 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                 - "pesticide_cycle": (string) A recommended pesticide frequency in Korean. If not needed, respond with "필요 없음".
                 - "temp_range": (string) The optimal temperature range for this plant in Korean (e.g., "18-25°C").
                 - "lifespan": (string) The expected lifespan of this plant in Korean (e.g., "수년", "10년 이상").
+                
+                (Note: image_url is NOT requested for this specific analysis prompt)
 
                 Return ONLY the JSON object. Do not include any markdown formatting, code blocks, or additional text.
             """.trimIndent()

@@ -99,8 +99,7 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
 
         args.plantAnalysis?.let { analysis ->
             showToast("추천받은 식물입니다! 닉네임을 정하고 저장해보세요.")
-            val bitmap = BitmapFactory.decodeResource(resources, R.drawable.plant2)
-            viewModel.setRecommendedPlant(analysis, bitmap)
+            viewModel.setRecommendedPlant(analysis, requireContext().applicationContext)
         }
     }
 
@@ -135,12 +134,17 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             binding.progressBar.isVisible = isAnalyzing
             binding.textViewPlaceholder.isVisible = !isAnalyzing && viewModel.originalBitmap.value == null
 
-            if (isAnalyzing) {
+            if (isAnalyzing && viewModel.analysisResult.value == null) {
+                // AI가 식물 종류를 분석 중일 때
                 binding.tvAiResultContent.text = "AI가 식물 정보를 생성하는 중입니다..."
                 binding.tvAiResultContent.setTextColor(resources.getColor(R.color.text_secondary, null))
                 binding.cardAiInfo.isVisible = true
                 binding.layoutNickname.isVisible = false
                 binding.btnSave.isVisible = false
+            } else if (isAnalyzing && viewModel.analysisResult.value != null) {
+                // 추천 식물의 이미지를 로드 중일 때
+                binding.progressBar.isVisible = true
+                binding.textViewPlaceholder.isVisible = false
             }
         }
 
@@ -168,8 +172,6 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
         }
 
         viewModel.analysisResult.observe(viewLifecycleOwner) { result ->
-            if (viewModel.isAiAnalyzing.value == true) return@observe
-
             if (result != null) {
                 val resultText = buildString {
                     append("🌱 식물명: ${result.official_name}\n")
@@ -329,18 +331,21 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
                 }
 
                 val cameFromOnboarding = args.plantAnalysis != null
-                val hasChanges = cameFromOnboarding || selectedBitmap != null
+
+                if (cameFromOnboarding) {
+                    viewModel.resetState()
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.onboardingFragment, true)
+                        .build()
+                    findNavController().navigate(R.id.navigation_home, null, navOptions)
+                    return
+                }
+
+                val hasChanges = selectedBitmap != null
 
                 val exitAction = {
                     viewModel.resetState()
-                    if (cameFromOnboarding) {
-                        val navOptions = NavOptions.Builder()
-                            .setPopUpTo(R.id.onboardingFragment, true)
-                            .build()
-                        findNavController().navigate(R.id.navigation_home, null, navOptions)
-                    } else {
-                        findNavController().popBackStack()
-                    }
+                    findNavController().popBackStack()
                 }
 
                 if (hasChanges) {

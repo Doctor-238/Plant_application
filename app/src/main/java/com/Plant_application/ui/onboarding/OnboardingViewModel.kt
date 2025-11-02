@@ -79,7 +79,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     - Humidity (1=Low, 5=High): $humidity
 
                     Provide the response in a strict JSON format without any markdown.
-                    The JSON response MUST contain ONLY the following keys: "is_plant", "official_name", "health_rating", "watering_cycle", "pesticide_cycle", "temp_range", "lifespan".
+                    The JSON response MUST contain ONLY the following keys: "is_plant", "official_name", "health_rating", "watering_cycle", "pesticide_cycle", "temp_range", "lifespan", "image_url".
                     
                     - "is_plant": (boolean) Always true for a recommendation.
                     - "official_name": (string) The scientific or common official name of the recommended plant in Korean.
@@ -88,6 +88,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     - "pesticide_cycle": (string) A recommended pesticide frequency in Korean. If not needed, respond with "필요 없음".
                     - "temp_range": (string) The optimal temperature range for this plant in Korean.
                     - "lifespan": (string) The expected lifespan of this plant in Korean.
+                    - "image_url": (string) A URL to a real, high-quality, publicly accessible (e.g., Unsplash, Pexels) photo of the plant.
                     
                     Ensure the response is ONLY the JSON object.
                 """.trimIndent()

@@ -10,6 +10,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.Plant_application.R
+import com.Plant_application.data.api.WikimediaApiService
+import com.Plant_application.data.api.WikimediaQuery
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.PlantItem
 import com.bumptech.glide.Glide
@@ -63,6 +65,10 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
             apiKey = getApplication<Application>().getString(R.string.gemini_api_key),
             generationConfig = config
         )
+    }
+
+    private val wikimediaApiService: WikimediaApiService by lazy {
+        WikimediaApiService.create()
     }
 
     private fun resizeBitmap(bitmap: Bitmap, maxDimension: Int = 512): Bitmap {
@@ -121,36 +127,58 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setRecommendedPlant(analysis: PlantAnalysis, context: Context) {
-        _isAiAnalyzing.value = true // Use this state for loading
+        _isAiAnalyzing.value = true
         _analysisResult.value = analysis
 
         viewModelScope.launch {
             try {
-                val bitmap = if (analysis.image_url != null) {
-                    downloadBitmap(context, analysis.image_url)
-                } else {
-                    null
+                val plantName = analysis.official_name
+                if (plantName.isNullOrBlank()) {
+                    throw Exception("AI가 식물 이름을 반환하지 않았습니다.")
                 }
+
+                val imageUrl = fetchImageFromWikimedia(plantName)
+                if (imageUrl.isNullOrBlank()) {
+                    throw Exception("Wikimedia에서 이미지를 찾지 못했습니다.")
+                }
+
+                Log.d("AddPlantViewModel", "Downloading image from URL: $imageUrl")
+                val bitmap = downloadBitmap(context, imageUrl)
 
                 if (bitmap != null) {
                     currentBitmap = bitmap
                     _originalBitmap.postValue(bitmap)
                 } else {
-                    // Fallback to placeholder if download fails or URL is null
-                    Log.w("AddPlantViewModel", "Failed to download image, using placeholder.")
-                    val placeholderBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.plant2)
-                    currentBitmap = placeholderBitmap
-                    _originalBitmap.postValue(placeholderBitmap)
+                    throw Exception("Glide가 URL에서 이미지를 다운로드하지 못했습니다.")
                 }
 
             } catch (e: Exception) {
                 Log.e("AddPlantViewModel", "Error loading recommended plant image", e)
-                _error.postValue("추천 식물 이미지를 불러오는데 실패했습니다.")
+                _error.postValue("추천 식물 이미지 로드 실패: ${e.message}")
                 val placeholderBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.plant2)
                 currentBitmap = placeholderBitmap
                 _originalBitmap.postValue(placeholderBitmap)
             } finally {
                 _isAiAnalyzing.postValue(false)
+            }
+        }
+    }
+
+    private suspend fun fetchImageFromWikimedia(plantName: String): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = wikimediaApiService.getPageImage(titles = plantName)
+                if (response.isSuccessful) {
+                    val pages = response.body()?.query?.pages
+                    val firstPage = pages?.values?.firstOrNull()
+                    firstPage?.thumbnail?.source
+                } else {
+                    Log.w("AddPlantViewModel", "Wikimedia API call failed: ${response.errorBody()?.string()}")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e("AddPlantViewModel", "fetchImageFromWikimedia failed", e)
+                null
             }
         }
     }
@@ -184,9 +212,8 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                 - "temp_range": (string) The optimal temperature range for this plant in Korean (e.g., "18-25°C").
                 - "lifespan": (string) The expected lifespan of this plant in Korean (e.g., "수년", "10년 이상").
                 
-                (Note: image_url is NOT requested for this specific analysis prompt)
-
-                Return ONLY the JSON object. Do not include any markdown formatting, code blocks, or additional text.
+                Do NOT include 'image_url'.
+                Return ONLY the JSON object.
             """.trimIndent()
 
             val inputContent = content {

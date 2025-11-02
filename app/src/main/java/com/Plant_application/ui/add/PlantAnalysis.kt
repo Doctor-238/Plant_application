@@ -13,6 +13,5 @@ data class PlantAnalysis(
     val watering_cycle: String? = null,
     val pesticide_cycle: String? = null,
     val temp_range: String? = null,
-    val lifespan: String? = null,
-    val image_url: String? = null
+    val lifespan: String? = null
 ) : Parcelable

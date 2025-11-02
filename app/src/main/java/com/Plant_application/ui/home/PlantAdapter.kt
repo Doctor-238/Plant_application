@@ -27,8 +27,11 @@ class PlantAdapter(private val onItemClicked: (PlantItem) -> Unit) : ListAdapter
     class PlantViewHolder(private val binding: ItemPlantBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(plantItem: PlantItem) {
             binding.tvPlantNickname.text = plantItem.nickname
-            binding.tvPlantOfficialName.text = plantItem.officialName
-            binding.tvWateringInfo.text = "물주기: ${plantItem.wateringCycle}"
+            binding.tvLifespan.text = plantItem.lifespan
+
+            // TODO: 실제 데이터베이스 값으로 변경 필요
+            binding.pbWaterGauge.progress = 50
+            binding.pbPesticideGauge.progress = 70
 
             Glide.with(itemView.context)
                 .load(Uri.fromFile(File(plantItem.imageUri)))

@@ -19,6 +19,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentHomeBinding
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
@@ -29,6 +31,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private val homeViewModel: HomeViewModel by viewModels()
     private lateinit var plantAdapter: PlantAdapter
     private var toast: Toast? = null
+    private var locationDialog: AlertDialog? = null
 
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -37,7 +40,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         if (isGranted) {
             checkAndRefresh()
         } else {
-            binding.swipeRefreshLayout.isRefreshing = false
+            homeViewModel.stopLoading()
             if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
                 showGoToSettingsDialog()
             } else {
@@ -53,6 +56,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         setupRecyclerView()
         setupSwipeRefreshLayout()
         observeViewModel()
+
+        binding.ivSettings.setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_home_to_navigation_settings)
+        }
+
+        binding.ivAddPlantHome.setOnClickListener {
+            findNavController().navigate(R.id.action_global_addPlantFragment)
+        }
     }
 
     override fun onResume() {
@@ -65,7 +76,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             val action = HomeFragmentDirections.actionNavigationHomeToPlantDetailFragment(plant.id)
             findNavController().navigate(action)
         }
-        binding.rvPlantList.adapter = plantAdapter
+        binding.rvPlants.adapter = plantAdapter
     }
 
     private fun setupSwipeRefreshLayout() {
@@ -76,7 +87,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun observeViewModel() {
         homeViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.swipeRefreshLayout.isRefreshing = isLoading
+            if (binding.swipeRefreshLayout.isRefreshing != isLoading) {
+                binding.swipeRefreshLayout.isRefreshing = isLoading
+            }
         }
 
         homeViewModel.error.observe(viewLifecycleOwner) { error ->
@@ -88,23 +101,52 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         homeViewModel.weatherInfo.observe(viewLifecycleOwner) { weather ->
             if (weather != null) {
+                binding.cardWeather.isVisible = true
                 binding.tvLocation.text = weather.name
-                binding.tvWeatherDesc.text = weather.weather.firstOrNull()?.description?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() } ?: ""
+
+                val weatherCondition = weather.weather.firstOrNull()
+                if (weatherCondition != null) {
+                    val description = weatherCondition.description.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                    }
+                    binding.tvWeatherDesc.text = description
+                    binding.ivWeatherIcon.setImageResource(getWeatherIcon(weatherCondition.icon))
+                }
+
+                val sdf = SimpleDateFormat("yyyy.MM.dd EEEE HH:mm", Locale.KOREAN)
+                binding.tvDateTime.text = sdf.format(Date())
+
                 binding.tvTemp.text = String.format(Locale.KOREAN, "%.0f°", weather.main.temp)
-                binding.tvFeelsLike.text = String.format(Locale.KOREAN, "체감 %.0f°", weather.main.feels_like)
-                binding.tvHumidity.text = "습도: ${weather.main.humidity}%"
+                binding.tvHumidity.text = "${weather.main.humidity}%"
+            } else {
+                binding.cardWeather.isVisible = false
             }
         }
 
         homeViewModel.allPlants.observe(viewLifecycleOwner) { plants ->
             binding.tvEmptyList.isVisible = plants.isEmpty()
-            binding.rvPlantList.isVisible = plants.isNotEmpty()
+            binding.rvPlants.isVisible = plants.isNotEmpty()
             plantAdapter.submitList(plants)
+        }
+    }
+
+    private fun getWeatherIcon(iconCode: String): Int {
+        return when (iconCode.dropLast(1)) {
+            "01" -> R.drawable.sunny
+            "02" -> R.drawable.cloudy
+            "03", "04" -> R.drawable.cloudy
+            "09", "10" -> R.drawable.rainy
+            "11" -> R.drawable.thunder
+            "13" -> R.drawable.snowy
+            "50" -> R.drawable.foggy
+            else -> R.drawable.cloudy
         }
     }
 
     private fun checkAndRefresh() {
         if (!isAdded) return
+
+        homeViewModel.startLoading()
 
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestLocationPermission()
@@ -113,8 +155,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            homeViewModel.stopLoading()
             showTurnOnLocationDialog()
-            binding.swipeRefreshLayout.isRefreshing = false
+            return
+        }
+
+        val apiKey = getString(R.string.openweathermap_api_key)
+        if (apiKey.isBlank() || apiKey == "YOUR_OPENWEATHERMAP_API_KEY") {
+            showToast("날씨 API 키가 설정되지 않았습니다.")
+            homeViewModel.stopLoading()
             return
         }
 
@@ -131,7 +180,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                     locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
                 }
                 .setNegativeButton("거부") { _, _ ->
-                    binding.swipeRefreshLayout.isRefreshing = false
+                    homeViewModel.stopLoading()
+                }
+                .setOnDismissListener {
+                    if (binding.swipeRefreshLayout.isRefreshing){
+                        homeViewModel.stopLoading()
+                    }
                 }
                 .show()
         } else {
@@ -141,7 +195,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun showGoToSettingsDialog() {
-        AlertDialog.Builder(requireContext())
+        if (locationDialog != null && locationDialog!!.isShowing) return
+
+        locationDialog = AlertDialog.Builder(requireContext())
             .setTitle("권한 필요")
             .setMessage("날씨 정보를 위해 위치 권한이 반드시 필요합니다. '설정'으로 이동하여 권한을 허용해주세요.")
             .setPositiveButton("설정으로 이동") { _, _ ->
@@ -151,20 +207,27 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 startActivity(intent)
             }
             .setNegativeButton("닫기") { _, _ ->
-                binding.swipeRefreshLayout.isRefreshing = false
+                homeViewModel.stopLoading()
             }
             .setCancelable(false)
             .show()
     }
 
     private fun showTurnOnLocationDialog() {
-        AlertDialog.Builder(requireContext())
+        if (locationDialog != null && locationDialog!!.isShowing) return
+
+        locationDialog = AlertDialog.Builder(requireContext())
             .setTitle("위치 서비스 비활성화")
             .setMessage("날씨 정보를 가져오려면 위치 서비스가 필요합니다. 설정에서 위치를 켜주세요.")
             .setPositiveButton("설정으로 이동") { _, _ ->
                 startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
             }
-            .setNegativeButton("취소", null)
+            .setNegativeButton("취소") { _, _ ->
+                homeViewModel.stopLoading()
+            }
+            .setOnDismissListener {
+                homeViewModel.stopLoading()
+            }
             .show()
     }
 
@@ -177,6 +240,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     override fun onDestroyView() {
         super.onDestroyView()
         toast?.cancel()
+        locationDialog?.dismiss()
+        locationDialog = null
         _binding = null
     }
 }

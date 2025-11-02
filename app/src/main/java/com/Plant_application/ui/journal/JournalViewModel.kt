@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.PlantItem
@@ -32,8 +33,7 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
     val searchQuery: LiveData<String> = _searchQuery
     private val _sortType = MutableLiveData("최신순")
 
-    private val allPlants: LiveData<List<PlantItem>>
-    private val _filteredPlants = MutableLiveData<List<PlantItem>>()
+    private val _plants: LiveData<List<PlantItem>>
 
     private val _isDeleteMode = MutableLiveData(false)
     val isDeleteMode: LiveData<Boolean> = _isDeleteMode
@@ -46,21 +46,25 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
 
     val currentTabState = MediatorLiveData<JournalTabState>()
 
+    private val filterTrigger = MediatorLiveData<Pair<String, String>>()
+
     init {
         repository = PlantRepository(plantDao)
-        allPlants = repository.getAllPlants()
 
-        val filterTrigger = MediatorLiveData<Unit>()
-        val triggerObserver = Observer<Any> { filterAndSortPlants() }
+        filterTrigger.addSource(_searchQuery) { query ->
+            filterTrigger.value = Pair(query ?: "", _sortType.value ?: "최신순")
+        }
+        filterTrigger.addSource(_sortType) { sort ->
+            filterTrigger.value = Pair(_searchQuery.value ?: "", sort ?: "최신순")
+        }
 
-        filterTrigger.addSource(allPlants, triggerObserver)
-        filterTrigger.addSource(_searchQuery, triggerObserver)
-        filterTrigger.addSource(_sortType, triggerObserver)
-        filterTrigger.observeForever {}
+        _plants = filterTrigger.switchMap { (query, sort) ->
+            repository.getPlants(query, sort)
+        }
 
         val stateObserver = Observer<Any> {
             val newState = JournalTabState(
-                _filteredPlants.value ?: emptyList(),
+                _plants.value ?: emptyList(),
                 _selectedItems.value ?: emptySet(),
                 _isDeleteMode.value ?: false
             )
@@ -68,34 +72,12 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
                 currentTabState.value = newState
             }
         }
-        currentTabState.addSource(_filteredPlants, stateObserver)
+        currentTabState.addSource(_plants, stateObserver)
         currentTabState.addSource(_selectedItems, stateObserver)
         currentTabState.addSource(_isDeleteMode, stateObserver)
     }
 
-    fun getPlantsForCurrentTab(): LiveData<List<PlantItem>> = _filteredPlants
-
-    private fun filterAndSortPlants() {
-        viewModelScope.launch(Dispatchers.Default) {
-            val plantList = allPlants.value ?: return@launch
-            val query = _searchQuery.value ?: ""
-            val sort = _sortType.value ?: "최신순"
-
-            val filtered = if (query.isEmpty()) {
-                plantList
-            } else {
-                plantList.filter { it.nickname.contains(query, ignoreCase = true) }
-            }
-
-            val sorted = when (sort) {
-                "오래된 순" -> filtered.sortedBy { it.timestamp }
-                "이름 오름차순" -> filtered.sortedBy { it.nickname }
-                "이름 내림차순" -> filtered.sortedByDescending { it.nickname }
-                else -> filtered.sortedByDescending { it.timestamp } // "최신순"
-            }
-            _filteredPlants.postValue(sorted)
-        }
-    }
+    fun getPlantsForCurrentTab(): LiveData<List<PlantItem>> = _plants
 
     fun setSearchQuery(query: String) {
         if (_searchQuery.value != query) _searchQuery.value = query
@@ -139,13 +121,11 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
     fun deleteSelectedItems() {
         viewModelScope.launch(Dispatchers.IO) {
             val idsToDelete = _selectedItems.value ?: return@launch
-            val itemsToDelete = allPlants.value?.filter { it.id in idsToDelete } ?: return@launch
+            val itemsToDelete = _plants.value?.filter { it.id in idsToDelete } ?: return@launch
 
             itemsToDelete.forEach { item ->
                 try {
-                    // 이미지 파일 삭제
                     File(item.imageUri).delete()
-                    // 데이터베이스에서 식물 정보 삭제
                     plantDao.delete(item)
                 } catch (e: Exception) {
                     Log.e("JournalViewModel", "Error deleting plant", e)

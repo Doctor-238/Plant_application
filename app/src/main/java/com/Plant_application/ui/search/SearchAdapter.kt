@@ -25,8 +25,11 @@ class SearchAdapter : ListAdapter<PlantItem, SearchAdapter.SearchViewHolder>(Dif
     class SearchViewHolder(private val binding: ItemPlantBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(plant: PlantItem) {
             binding.tvPlantNickname.text = plant.nickname
-            binding.tvPlantOfficialName.text = plant.officialName
-            binding.tvWateringInfo.text = "물주기: ${plant.wateringCycle}"
+            binding.tvLifespan.text = plant.lifespan
+
+            // TODO: 실제 데이터베이스 값으로 변경 필요
+            binding.pbWaterGauge.progress = 50
+            binding.pbPesticideGauge.progress = 70
 
             Glide.with(itemView.context)
                 .load(Uri.fromFile(File(plant.imageUri)))

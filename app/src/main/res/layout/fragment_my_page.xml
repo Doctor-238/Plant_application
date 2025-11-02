@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_main"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="16dp"
@@ -12,6 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="마이페이지"
+        android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold" />
 
@@ -20,6 +22,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="앱 전체 데이터 초기화" />
+        android:backgroundTint="@color/delete_button_red_active"
+        android:text="앱 전체 데이터 초기화"
+        android:textColor="@color/white" />
 
 </LinearLayout>

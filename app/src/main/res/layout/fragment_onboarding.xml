@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_main"
     android:fillViewport="true"
     tools:context=".ui.onboarding.OnboardingFragment">
 
@@ -16,97 +17,210 @@
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
             android:text="MY GREEN PLANTY"
+            android:textColor="@color/primary"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@color/primary"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/layout_location"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:hint="식물을 둘 장소 (예: 거실 창가)"
-            app:layout_constraintTop_toBottomOf="@id/tv_title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_location"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tv_watering_label"
+            android:id="@+id/tv_space_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="물 주기 선호도"
+            android:layout_marginTop="48dp"
+            android:text="식물을 키우는 공간은 어디인가요?"
             android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/layout_location" />
+            app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_watering"
+        <RadioGroup
+            android:id="@+id/rg_space"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="true"
-            app:layout_constraintTop_toBottomOf="@id/tv_watering_label"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-            <com.google.android.material.chip.Chip style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="자주"/>
-            <com.google.android.material.chip.Chip style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="보통"/>
-            <com.google.android.material.chip.Chip style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="가끔"/>
-        </com.google.android.material.chip.ChipGroup>
+            app:layout_constraintTop_toBottomOf="@id/tv_space_label">
+
+            <RadioButton
+                android:id="@+id/rb_space_1"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_space_2"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_space_3"
+                style="@style/OnboardingRadioButton"
+                android:checked="true" />
+            <RadioButton
+                android:id="@+id/rb_space_4"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_space_5"
+                style="@style/OnboardingRadioButton" />
+        </RadioGroup>
+        <TextView style="@style/OnboardingRadioLabel" android:text="실내" app:layout_constraintStart_toStartOf="@id/rg_space" app:layout_constraintTop_toBottomOf="@id/rg_space" />
+        <TextView style="@style/OnboardingRadioLabel" android:text="실외" app:layout_constraintEnd_toEndOf="@id/rg_space" app:layout_constraintTop_toBottomOf="@id/rg_space" />
+
 
         <TextView
             android:id="@+id/tv_sunlight_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="햇빛 양"
+            android:layout_marginTop="40dp"
+            android:text="일조량은 많은 편인가요?"
             android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/chip_group_watering" />
+            app:layout_constraintTop_toBottomOf="@id/rg_space" />
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_sunlight"
+        <RadioGroup
+            android:id="@+id/rg_sunlight"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="true"
-            app:layout_constraintTop_toBottomOf="@id/tv_sunlight_label"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-            <com.google.android.material.chip.Chip style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="많이"/>
-            <com.google.android.material.chip.Chip style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="보통"/>
-            <com.google.android.material.chip.Chip style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="적게"/>
-        </com.google.android.material.chip.ChipGroup>
+            app:layout_constraintTop_toBottomOf="@id/tv_sunlight_label">
+
+            <RadioButton
+                android:id="@+id/rb_sun_1"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_sun_2"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_sun_3"
+                style="@style/OnboardingRadioButton"
+                android:checked="true" />
+            <RadioButton
+                android:id="@+id/rb_sun_4"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_sun_5"
+                style="@style/OnboardingRadioButton" />
+        </RadioGroup>
+        <TextView style="@style/OnboardingRadioLabel" android:text="적음" app:layout_constraintStart_toStartOf="@id/rg_sunlight" app:layout_constraintTop_toBottomOf="@id/rg_sunlight" />
+        <TextView style="@style/OnboardingRadioLabel" android:text="많음" app:layout_constraintEnd_toEndOf="@id/rg_sunlight" app:layout_constraintTop_toBottomOf="@id/rg_sunlight" />
+
+        <TextView
+            android:id="@+id/tv_temp_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="실내 온도는 높은 편인가요?"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/rg_sunlight" />
+
+        <RadioGroup
+            android:id="@+id/rg_temp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_temp_label">
+
+            <RadioButton
+                android:id="@+id/rb_temp_1"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_temp_2"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_temp_3"
+                style="@style/OnboardingRadioButton"
+                android:checked="true" />
+            <RadioButton
+                android:id="@+id/rb_temp_4"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_temp_5"
+                style="@style/OnboardingRadioButton" />
+        </RadioGroup>
+        <TextView style="@style/OnboardingRadioLabel" android:text="낮음" app:layout_constraintStart_toStartOf="@id/rg_temp" app:layout_constraintTop_toBottomOf="@id/rg_temp" />
+        <TextView style="@style/OnboardingRadioLabel" android:text="높음" app:layout_constraintEnd_toEndOf="@id/rg_temp" app:layout_constraintTop_toBottomOf="@id/rg_temp" />
+
+        <TextView
+            android:id="@+id/tv_humidity_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="실내 습도는 높은 편인가요?"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/rg_temp" />
+
+        <RadioGroup
+            android:id="@+id/rg_humidity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_humidity_label">
+
+            <RadioButton
+                android:id="@+id/rb_humidity_1"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_humidity_2"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_humidity_3"
+                style="@style/OnboardingRadioButton"
+                android:checked="true" />
+            <RadioButton
+                android:id="@+id/rb_humidity_4"
+                style="@style/OnboardingRadioButton" />
+            <RadioButton
+                android:id="@+id/rb_humidity_5"
+                style="@style/OnboardingRadioButton" />
+        </RadioGroup>
+        <TextView style="@style/OnboardingRadioLabel" android:text="낮음" app:layout_constraintStart_toStartOf="@id/rg_humidity" app:layout_constraintTop_toBottomOf="@id/rg_humidity" />
+        <TextView style="@style/OnboardingRadioLabel" android:text="높음" app:layout_constraintEnd_toEndOf="@id/rg_humidity" app:layout_constraintTop_toBottomOf="@id/rg_humidity" />
+
 
         <Button
             android:id="@+id/btn_recommend"
             android:layout_width="0dp"
             android:layout_height="60dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="48dp"
             android:text="나에게 맞는 식물 추천받기"
-            app:layout_constraintTop_toBottomOf="@id/chip_group_sunlight"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/rg_humidity" />
 
         <ProgressBar
             android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

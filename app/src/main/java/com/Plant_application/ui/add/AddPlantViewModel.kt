@@ -32,159 +32,203 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
     private val _isSaving = MutableLiveData(false)
     val isSaving: LiveData<Boolean> = _isSaving
 
-    private val _isSaveCompleted = MutableLiveData(false)
-    val isSaveCompleted: LiveData<Boolean> = _isSaveCompleted
+    private val _analysisResult = MutableLiveData<PlantAnalysis?>()
+    val analysisResult: LiveData<PlantAnalysis?> = _analysisResult
 
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _error = MutableLiveData<String?>()
+    val error: LiveData<String?> = _error
+
+    private val _saveComplete = MutableLiveData(false)
+    val saveComplete: LiveData<Boolean> = _saveComplete
 
     private val _originalBitmap = MutableLiveData<Bitmap?>()
     val originalBitmap: LiveData<Bitmap?> = _originalBitmap
 
-    private val _analysisResult = MutableLiveData<PlantAnalysis?>()
-    val analysisResult: LiveData<PlantAnalysis?> = _analysisResult
+    private val db = AppDatabase.getDatabase(application)
+    private var currentBitmap: Bitmap? = null
 
-    val hasChanges = MutableLiveData(false)
-
-    private var generativeModel: GenerativeModel? = null
-
-    fun onImageSelected(bitmap: Bitmap, apiKey: String) {
-        resetAllState()
-        _originalBitmap.value = bitmap
-        hasChanges.value = true
-
-        val config = GenerationConfig.Builder().apply {
-            responseMimeType = "application/json"
+    private val generativeModel: GenerativeModel by lazy {
+        val config = GenerationConfig.builder().apply {
+            temperature = 0.4f
+            topK = 32
+            topP = 1.0f
+            maxOutputTokens = 2048
         }.build()
 
-        generativeModel = GenerativeModel(
-            modelName = "gemini-2.5-flash",
-            apiKey = apiKey,
+        GenerativeModel(
+            modelName = "gemini-2.5-flash-image",
+            apiKey = getApplication<Application>().getString(R.string.gemini_api_key),
             generationConfig = config
         )
+    }
 
-        _isAiAnalyzing.value = true
-
-        viewModelScope.launch {
-            val result = analyzeImage(bitmap)
-            _isAiAnalyzing.postValue(false)
-
-            if (result == null || !result.is_plant) {
-                withContext(Dispatchers.Main) {
-                    _errorMessage.value = "식물 사진이 아니거나, 분석에 실패했습니다."
-                    resetAllState()
-                }
+    private fun resizeBitmap(bitmap: Bitmap, maxDimension: Int = 512): Bitmap {
+        val originalWidth = bitmap.width; val originalHeight = bitmap.height
+        var resizedWidth = originalWidth; var resizedHeight = originalHeight
+        if (originalHeight > maxDimension || originalWidth > maxDimension) {
+            if (originalWidth > originalHeight) {
+                resizedWidth = maxDimension
+                resizedHeight = (resizedWidth * originalHeight) / originalWidth
             } else {
-                _analysisResult.postValue(result)
+                resizedHeight = maxDimension
+                resizedWidth = (resizedHeight * originalWidth) / originalHeight
             }
         }
+        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false)
     }
 
-    fun setInitialAnalysis(analysis: PlantAnalysis) {
-        if (_analysisResult.value == null) {
-            _analysisResult.value = analysis
-            hasChanges.value = true // 변경 사항이 있음을 알림
-        }
+    fun resetState() {
+        _isAiAnalyzing.value = false
+        _analysisResult.value = null
+        _originalBitmap.value = null
+        currentBitmap?.recycle()
+        currentBitmap = null
+        _error.value = null
     }
 
-    private suspend fun analyzeImage(bitmap: Bitmap): PlantAnalysis? {
-        return withContext(Dispatchers.IO) {
-            try {
-                // AI 프롬프트를 요구사항에 맞게 상세하고 명확하게 수정
-                val inputContent = content {
-                    image(bitmap)
-                    text("""
-                        You are an expert botanist. Analyze the plant in the image and provide a detailed analysis in a strict JSON format without any markdown.
-                        Your JSON response MUST contain ONLY the following keys: "is_plant", "official_name", "health_rating", "watering_cycle", "pesticide_cycle", "temp_range", "lifespan".
+    fun analyzePlantImage(bitmap: Bitmap) {
+        if (_isAiAnalyzing.value == true) return
 
-                        - "is_plant": (boolean) True if the image contains a plant, otherwise false.
-                        - "official_name": (string) The scientific or common official name of the plant.
-                        - "health_rating": (float) A health score from 0.0 to 5.0. 5.0 is perfectly healthy.
-                        - "watering_cycle": (string) A recommended watering frequency (e.g., "주 1-2회", "10일에 한 번").
-                        - "pesticide_cycle": (string) A recommended pesticide frequency. If not needed, respond with "필요 없음".
-                        - "temp_range": (string) The optimal temperature range for the plant (e.g., "18°C ~ 25°C").
-                        - "lifespan": (string) The expected lifespan of the plant (e.g., "약 5년", "10년 이상").
-                    """.trimIndent())
-                }
+        resetState()
 
-                val response = generativeModel!!.generateContent(inputContent)
-                val json = Json { ignoreUnknownKeys = true }
-                json.decodeFromString<PlantAnalysis>(response.text!!)
-            } catch (e: Exception) {
-                Log.e("AddPlantViewModel", "AI analysis failed", e)
-                null
-            }
-        }
-    }
+        currentBitmap = bitmap
+        _originalBitmap.value = bitmap
+        _isAiAnalyzing.value = true
+        _error.value = null
 
-    fun savePlant(nickname: String) {
         viewModelScope.launch {
-            val analysis = _analysisResult.value
-            val bitmap = _originalBitmap.value
-            if (analysis == null || bitmap == null) {
-                _errorMessage.value = "분석 결과가 없거나 이미지가 없습니다."
-                return@launch
+            try {
+                val resizedBitmap = resizeBitmap(bitmap)
+                val result = analyzePlantWithAI(resizedBitmap)
+
+                if (result.is_plant) {
+                    _analysisResult.postValue(result)
+                } else {
+                    _error.postValue("식물이 아닌 것 같습니다. 다른 사진을 등록해주세요.")
+                    resetState()
+                }
+            } catch (e: Exception) {
+                Log.e("AddPlantViewModel", "AI 분석 실패", e)
+                _error.postValue("AI 분석에 실패했습니다: ${e.message}")
+                resetState()
+            } finally {
+                _isAiAnalyzing.postValue(false)
+            }
+        }
+    }
+
+    fun setRecommendedPlant(analysis: PlantAnalysis, bitmap: Bitmap) {
+        _analysisResult.value = analysis
+        _originalBitmap.value = bitmap
+        currentBitmap = bitmap
+        _isAiAnalyzing.value = false
+    }
+
+    private suspend fun analyzePlantWithAI(bitmap: Bitmap): PlantAnalysis = withContext(Dispatchers.IO) {
+        try {
+            val prompt = """
+                You are an expert botanist. Analyze the plant in the image and provide a detailed analysis in a strict JSON format without any markdown.
+                Your JSON response MUST contain ONLY the following keys: "is_plant", "official_name", "health_rating", "watering_cycle", "pesticide_cycle", "temp_range", "lifespan".
+
+                - "is_plant": (boolean) True if the image contains a plant, otherwise false.
+                - "official_name": (string) The scientific or common official name of the plant in Korean (e.g., "몬스테라 (Monstera deliciosa)").
+                - "health_rating": (float) A health score from 0.0 to 5.0. 5.0 is perfectly healthy.
+                - "watering_cycle": (string) A recommended watering frequency in Korean (e.g., "주 1-2회", "10일에 한 번").
+                - "pesticide_cycle": (string) A recommended pesticide frequency in Korean. If not needed, respond with "필요 없음".
+                - "temp_range": (string) The optimal temperature range for this plant in Korean (e.g., "18-25°C").
+                - "lifespan": (string) The expected lifespan of this plant in Korean (e.g., "수년", "10년 이상").
+
+                Return ONLY the JSON object. Do not include any markdown formatting, code blocks, or additional text.
+            """.trimIndent()
+
+            val inputContent = content {
+                image(bitmap)
+                text(prompt)
             }
 
-            _isSaving.value = true
-            try {
-                val imagePath = saveBitmapToInternalStorage(bitmap)
-                if (imagePath == null) {
-                    throw IOException("이미지 저장 실패")
-                }
+            val response = generativeModel.generateContent(inputContent)
+            val responseText = response.text ?: throw Exception("AI 응답이 비어있습니다.")
 
-                val newPlant = PlantItem(
-                    nickname = nickname,
-                    officialName = analysis.official_name ?: "N/A",
+            Log.d("AddPlantViewModel", "AI 원본 응답: $responseText")
+            val cleanedJson = responseText.trim().removePrefix("```json").removeSuffix("```").trim()
+            Log.d("AddPlantViewModel", "정제된 JSON: $cleanedJson")
+
+            Json { ignoreUnknownKeys = true }.decodeFromString<PlantAnalysis>(cleanedJson)
+
+        } catch (e: Exception) {
+            Log.e("AddPlantViewModel", "식물 분석 실패", e)
+            throw Exception("식물 분석에 실패했습니다: ${e.message}")
+        }
+    }
+
+    fun savePlantToDatabase(nickname: String) {
+        if (_isSaving.value == true) return
+
+        val analysis = _analysisResult.value
+        val bitmap = currentBitmap
+
+        if (bitmap == null) {
+            _error.value = "식물 사진을 등록해주세요."
+            return
+        }
+
+        if (analysis == null || !analysis.is_plant) {
+            _error.value = "저장할 수 있는 식물 정보가 없습니다."
+            return
+        }
+
+        _isSaving.value = true
+
+        viewModelScope.launch {
+            try {
+                val imagePath = saveImageToInternalStorage(bitmap)
+
+                val plantItem = PlantItem(
+                    nickname = nickname.ifBlank { analysis.official_name ?: "이름 없는 식물" },
+                    officialName = analysis.official_name ?: "알 수 없음",
                     imageUri = imagePath,
-                    wateringCycle = analysis.watering_cycle ?: "N/A",
-                    pesticideCycle = analysis.pesticide_cycle ?: "N/A",
-                    healthRating = analysis.health_rating ?: 0.0f,
-                    tempRange = analysis.temp_range ?: "N/A",
-                    lifespan = analysis.lifespan ?: "N/A"
+                    healthRating = analysis.health_rating ?: 3.0f,
+                    wateringCycle = analysis.watering_cycle ?: "알 수 없음",
+                    pesticideCycle = analysis.pesticide_cycle ?: "알 수 없음",
+                    tempRange = analysis.temp_range ?: "알 수 없음",
+                    lifespan = analysis.lifespan ?: "알 수 없음"
                 )
 
                 withContext(Dispatchers.IO) {
-                    AppDatabase.getDatabase(getApplication()).plantDao().insert(newPlant)
+                    db.plantDao().insert(plantItem)
                 }
-                _isSaveCompleted.postValue(true)
+
+                _saveComplete.postValue(true)
 
             } catch (e: Exception) {
-                _errorMessage.postValue("저장 중 오류 발생: ${e.message}")
+                Log.e("AddPlantViewModel", "저장 실패", e)
+                _error.postValue("저장에 실패했습니다: ${e.message}")
             } finally {
                 _isSaving.postValue(false)
             }
         }
     }
 
-    private suspend fun saveBitmapToInternalStorage(bitmap: Bitmap): String? {
-        return withContext(Dispatchers.IO) {
-            val directory = getApplication<Application>().filesDir
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val fileName = "plant_$timeStamp.jpg"
-            val file = File(directory, fileName)
-            try {
-                FileOutputStream(file).use { stream ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
-                }
-                file.absolutePath
-            } catch (e: IOException) {
-                e.printStackTrace()
-                null
+    private suspend fun saveImageToInternalStorage(bitmap: Bitmap): String = withContext(Dispatchers.IO) {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val fileName = "plant_$timeStamp.jpg"
+        val file = File(getApplication<Application>().filesDir, fileName)
+
+        FileOutputStream(file).use { out ->
+            if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)) {
+                throw IOException("비트맵 압축 실패")
             }
         }
+        file.absolutePath
     }
 
-    fun clearErrorMessage() {
-        _errorMessage.value = null
+    fun clearError() {
+        _error.value = null
     }
 
-    fun resetAllState() {
-        _originalBitmap.value = null
-        _analysisResult.value = null
-        _isAiAnalyzing.value = false
-        _isSaving.value = false
-        _isSaveCompleted.value = false
-        hasChanges.value = false
+    override fun onCleared() {
+        super.onCleared()
+        currentBitmap?.recycle()
+        currentBitmap = null
     }
 }

@@ -17,7 +17,6 @@ class MyPageViewModel(application: Application) : AndroidViewModel(application) 
 
     private val db = AppDatabase.getDatabase(application)
     private val prefs = PreferenceManager(application)
-    private val plantRepository = PlantRepository(db.plantDao())
 
     private val _isProcessing = MutableLiveData(false)
     val isProcessing: LiveData<Boolean> = _isProcessing
@@ -31,19 +30,9 @@ class MyPageViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch {
             try {
-                // 저장된 모든 식물 이미지 파일 삭제
-                val allPlants = withContext(Dispatchers.IO) {
-                    // LiveData가 아닌 직접 DB 접근이 필요
-                    db.plantDao().getAllPlants().value ?: emptyList()
-                }
-                allPlants.forEach { File(it.imageUri).delete() }
-
-                // 데이터베이스 클리어
                 withContext(Dispatchers.IO) {
-                    db.clearAllTables()
+                    db.clearAllData()
                 }
-
-                // SharedPreferences 초기화
                 prefs.isFirstLaunch = true
 
                 _resetComplete.postValue(true)

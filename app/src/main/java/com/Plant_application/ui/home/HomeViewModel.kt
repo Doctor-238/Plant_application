@@ -56,29 +56,47 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         allPlants = plantRepository.getAllPlants()
     }
 
+    fun startLoading() {
+        if (_isLoading.value != true) _isLoading.value = true
+    }
+
+    fun stopLoading() {
+        _isLoading.value = false
+    }
+
     fun refreshData() {
         cancellationTokenSource.cancel()
         cancellationTokenSource = CancellationTokenSource()
         fetchJob?.cancel()
 
         fetchJob = viewModelScope.launch {
-            _isLoading.value = true
+            startLoading()
             try {
                 if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     throw SecurityException("위치 권한이 없습니다.")
                 }
                 val location = getFreshLocation()
-                fetchWeatherForLocation(location, getApplication<Application>().getString(R.string.openweathermap_api_key))
+                val apiKey = getApplication<Application>().getString(R.string.openweathermap_api_key)
+                fetchWeatherForLocation(location, apiKey)
 
             } catch (e: Exception) {
                 handleFetchError(e)
             } finally {
-                _isLoading.value = false
+                stopLoading()
             }
         }
     }
 
     private suspend fun getFreshLocation(): Location {
+        try {
+            val lastLocation = fusedLocationClient.lastLocation.await()
+            if (lastLocation != null && (System.currentTimeMillis() - lastLocation.time) < 600000) {
+                return lastLocation
+            }
+        } catch (e: Exception) {
+            Log.w("HomeViewModel", "마지막 위치 가져오기 실패", e)
+        }
+
         return fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_BALANCED_POWER_ACCURACY,
             cancellationTokenSource.token
@@ -91,7 +109,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             _weatherInfo.postValue(response.body())
         } else {
             val errorBody = response.errorBody()?.string() ?: "알 수 없는 오류"
-            throw IOException("날씨 정보를 가져오는 데 실패했습니다: $errorBody")
+            throw IOException("날씨 정보를 가져오는 데 실패했습니다: ${response.code()} $errorBody")
         }
     }
 
@@ -100,7 +118,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val errorMessage = when (e) {
             is SecurityException -> "날씨 정보를 보려면 위치 권한을 허용해주세요."
             is IOException -> e.message
-            else -> "위치를 가져올 수 없습니다. GPS를 켜고 잠시 후 다시 시도해주세요."
+            is com.google.android.gms.tasks.RuntimeExecutionException -> "위치를 가져올 수 없습니다. GPS를 켜고 잠시 후 다시 시도해주세요."
+            else -> "날씨 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요."
         }
         _error.postValue(errorMessage)
     }

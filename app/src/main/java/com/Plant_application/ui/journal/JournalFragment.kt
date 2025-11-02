@@ -12,7 +12,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentJournalBinding
 import kotlinx.coroutines.launch
@@ -29,7 +28,6 @@ class JournalFragment : Fragment(R.layout.fragment_journal) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentJournalBinding.bind(view)
 
-        setupViewPager()
         setupSearch()
         setupSortSpinner()
         setupBackButtonHandler()
@@ -72,13 +70,11 @@ class JournalFragment : Fragment(R.layout.fragment_journal) {
             }
         }
 
-        viewModel.isDeleteMode.observe(viewLifecycleOwner) { notifyAdapterPayload("DELETE_MODE_CHANGED") }
-        viewModel.selectedItems.observe(viewLifecycleOwner) { notifyAdapterPayload("SELECTION_CHANGED") }
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.resetSearchEvent.collect {
                     binding.searchViewJournal.setQuery("", false)
+                    binding.searchViewDeleteJournal.setQuery("", false)
                 }
             }
         }
@@ -94,21 +90,16 @@ class JournalFragment : Fragment(R.layout.fragment_journal) {
         binding.ivSelectAll.setImageResource(if (isChecked) R.drawable.ic_checkbox_checked_custom else R.drawable.ic_checkbox_unchecked_custom)
     }
 
-    private fun setupViewPager() {
-        binding.viewPagerJournal.adapter = object : FragmentStateAdapter(this) {
-            override fun getItemCount(): Int = 1
-            override fun createFragment(position: Int): Fragment = PlantListFragment.newInstance()
-        }
-    }
-
-    private fun notifyAdapterPayload(payload: String) {
-        // ViewPager2는 프래그먼트를 다시 생성할 수 있으므로, ID로 찾는 것이 더 안정적입니다.
-        val fragment = childFragmentManager.findFragmentByTag("f0")
-        (fragment as? PlantListFragment)?.notifyAdapter(payload)
-    }
-
     private fun setupSearch() {
         binding.searchViewJournal.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextChange(newText: String?): Boolean {
+                viewModel.setSearchQuery(newText.orEmpty())
+                return true
+            }
+        })
+
+        binding.searchViewDeleteJournal.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 viewModel.setSearchQuery(newText.orEmpty())

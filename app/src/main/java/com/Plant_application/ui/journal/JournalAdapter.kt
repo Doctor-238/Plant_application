@@ -50,8 +50,10 @@ class JournalAdapter(
             isItemSelected: (Int) -> Boolean
         ) {
             binding.tvPlantNickname.text = plant.nickname
-            binding.tvWateringInfo.text = "물 주기: ${plant.wateringCycleMin}-${plant.wateringCycleMax}일"
             binding.ratingBarHealth.rating = plant.healthRating
+
+            val waterRange = formatRange(plant.wateringCycleMin, plant.wateringCycleMax, "일")
+            binding.tvWateringInfo.text = "물 주기: $waterRange"
 
             Glide.with(itemView.context).load(Uri.fromFile(File(plant.imageUri))).into(binding.ivPlantImage)
 
@@ -63,6 +65,14 @@ class JournalAdapter(
 
             updateDeleteModeUI(isDeleteMode())
             updateSelectionUI(isItemSelected(plant.id))
+        }
+
+        private fun formatRange(min: Int, max: Int, unit: String): String {
+            return when {
+                max <= 0 -> "필요 없음"
+                min == max -> "$max$unit"
+                else -> "$min-$max$unit"
+            }
         }
 
         fun updateDeleteModeUI(isDelete: Boolean) {

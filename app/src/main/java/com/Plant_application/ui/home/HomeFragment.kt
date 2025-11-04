@@ -72,10 +72,20 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupRecyclerView() {
-        plantAdapter = PlantAdapter { plant ->
-            val action = HomeFragmentDirections.actionNavigationHomeToPlantDetailFragment(plant.id)
-            findNavController().navigate(action)
-        }
+        plantAdapter = PlantAdapter(
+            onItemClicked = { plant ->
+                val action = HomeFragmentDirections.actionNavigationHomeToPlantDetailFragment(plant.id)
+                findNavController().navigate(action)
+            },
+            onWaterClicked = { plant ->
+                homeViewModel.updateLastWatered(plant)
+                showToast("${plant.nickname} 물 주기 완료!")
+            },
+            onPesticideClicked = { plant ->
+                homeViewModel.updateLastPesticide(plant)
+                showToast("${plant.nickname} 살충 완료!")
+            }
+        )
         binding.rvPlants.adapter = plantAdapter
     }
 

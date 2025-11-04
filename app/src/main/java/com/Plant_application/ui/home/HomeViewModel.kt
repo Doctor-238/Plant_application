@@ -128,6 +128,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         _error.value = null
     }
 
+    fun updateLastWatered(plant: PlantItem) {
+        viewModelScope.launch {
+            val updatedPlant = plant.copy(lastWateredTimestamp = System.currentTimeMillis())
+            plantRepository.updatePlant(updatedPlant)
+        }
+    }
+
+    fun updateLastPesticide(plant: PlantItem) {
+        viewModelScope.launch {
+            val updatedPlant = plant.copy(lastPesticideTimestamp = System.currentTimeMillis())
+            plantRepository.updatePlant(updatedPlant)
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         cancellationTokenSource.cancel()

@@ -41,7 +41,7 @@
             tools:text="우리집 몬스테라" />
 
         <TextView
-            android:id="@+id/tv_water_gauge_label"
+            android:id="@+id/tv_water_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -57,14 +57,15 @@
             android:layout_width="0dp"
             android:layout_height="8dp"
             android:layout_marginTop="2dp"
-            android:progressDrawable="@drawable/bg_progress_bar_water"
+            android:progressDrawable="@drawable/bg_progress_gauge_water"
             app:layout_constraintEnd_toEndOf="@id/tv_plant_nickname"
-            app:layout_constraintStart_toStartOf="@id/tv_water_gauge_label"
-            app:layout_constraintTop_toBottomOf="@id/tv_water_gauge_label"
-            tools:progress="50" />
+            app:layout_constraintStart_toStartOf="@id/tv_water_info"
+            app:layout_constraintTop_toBottomOf="@id/tv_water_info"
+            tools:progress="50"
+            tools:secondaryProgress="70"/>
 
         <TextView
-            android:id="@+id/tv_pesticide_gauge_label"
+            android:id="@+id/tv_pesticide_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -80,11 +81,12 @@
             android:layout_width="0dp"
             android:layout_height="8dp"
             android:layout_marginTop="2dp"
-            android:progressDrawable="@drawable/bg_progress_bar_pesticide"
+            android:progressDrawable="@drawable/bg_progress_gauge_pesticide"
             app:layout_constraintEnd_toEndOf="@id/pb_water_gauge"
-            app:layout_constraintStart_toStartOf="@id/tv_pesticide_gauge_label"
-            app:layout_constraintTop_toBottomOf="@id/tv_pesticide_gauge_label"
-            tools:progress="70" />
+            app:layout_constraintStart_toStartOf="@id/tv_pesticide_info"
+            app:layout_constraintTop_toBottomOf="@id/tv_pesticide_info"
+            tools:progress="70"
+            tools:secondaryProgress="80"/>
 
         <TextView
             android:id="@+id/tv_lifespan_label"
@@ -108,16 +110,30 @@
             app:layout_constraintStart_toEndOf="@id/tv_lifespan_label"
             tools:text="10년" />
 
-        <CheckBox
-            android:id="@+id/cb_check"
+        <Button
+            android:id="@+id/btn_water_check"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:minWidth="0dp"
+            android:text="물 주기"
             android:minHeight="0dp"
-            app:layout_constraintBottom_toBottomOf="@id/tv_lifespan"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="8dp"
+            app:layout_constraintEnd_toStartOf="@id/btn_pesticide_check"
+            app:layout_constraintTop_toBottomOf="@id/pb_pesticide_gauge"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <Button
+            android:id="@+id/btn_pesticide_check"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="살충"
+            android:minHeight="0dp"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="8dp"
             app:layout_constraintEnd_toEndOf="@id/pb_pesticide_gauge"
-            app:layout_constraintTop_toTopOf="@id/tv_lifespan_label" />
+            app:layout_constraintTop_toTopOf="@id/btn_water_check" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

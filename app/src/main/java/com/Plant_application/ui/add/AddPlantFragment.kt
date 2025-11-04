@@ -173,12 +173,16 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
 
         viewModel.analysisResult.observe(viewLifecycleOwner) { result ->
             if (result != null) {
+                val waterRange = formatRange(result.watering_cycle_min_days ?: 0, result.watering_cycle_max_days ?: 0, "일")
+                val pesticideRange = formatRange(result.pesticide_cycle_min_days ?: 0, result.pesticide_cycle_max_days ?: 0, "일")
+                val lifespanRange = formatRange(result.lifespan_min_years ?: 0, result.lifespan_max_years ?: 0, "년")
+
                 val resultText = buildString {
                     append("🌱 식물명: ${result.official_name}\n")
-                    append("💧 물 주기: ${result.watering_cycle_min_days}-${result.watering_cycle_max_days}일\n")
+                    append("💧 물 주기: $waterRange\n")
                     append("🌡️ 적정 온도: ${result.temp_range}\n")
-                    append("🐛 살충제: ${result.pesticide_cycle_min_days}-${result.pesticide_cycle_max_days}일\n")
-                    append("⏳ 수명: ${result.lifespan_min_years}-${result.lifespan_max_years}년\n")
+                    append("🐛 살충제: $pesticideRange\n")
+                    append("⏳ 수명: $lifespanRange\n")
                     append("❤️ 건강도: ${result.health_rating}/5.0")
                 }
                 binding.tvAiResultContent.text = resultText
@@ -209,6 +213,14 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
                     findNavController().popBackStack()
                 }
             }
+        }
+    }
+
+    private fun formatRange(min: Int, max: Int, unit: String): String {
+        return when {
+            max <= 0 -> "필요 없음"
+            min == max -> "$max$unit"
+            else -> "$min-$max$unit"
         }
     }
 

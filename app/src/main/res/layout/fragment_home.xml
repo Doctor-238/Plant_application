@@ -46,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="8dp"
-                android:visibility="invisible"
+                android:visibility="visible"
                 app:cardBackgroundColor="@color/card_background_light_green"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
@@ -55,7 +55,30 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="210dp"
                     android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tv_weather_placeholder"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="날씨 정보 로딩 중..."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:visibility="visible" />
+
+                    <androidx.constraintlayout.widget.Group
+                        android:id="@+id/group_weather_data"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        app:constraint_referenced_ids="tv_date_time,iv_weather_icon,tv_weather_desc,tv_location,card_humidity,card_temp"
+                        tools:visibility="visible" />
 
                     <TextView
                         android:id="@+id/tv_date_time"

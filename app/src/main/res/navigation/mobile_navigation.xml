@@ -68,6 +68,11 @@
             app:argType="com.Plant_application.ui.add.PlantAnalysis"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
     <action
         android:id="@+id/action_global_addPlantFragment"

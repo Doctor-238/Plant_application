@@ -15,13 +15,11 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     private val plantRepository: PlantRepository
     val allPlants: LiveData<List<PlantItem>>
 
-    // 모든 할 일 목록 (날짜별로 그룹화)
     private val _allTodoItems = MediatorLiveData<Map<Long, List<TodoItem>>>()
     val allTodoItems: LiveData<Map<Long, List<TodoItem>>> = _allTodoItems
 
-    // 선택된 날짜의 할 일 목록
-    private val _selectedDateTodos = MutableLiveData<List<TodoItem>>(emptyList())
-    val selectedDateTodos: LiveData<List<TodoItem>> = _selectedDateTodos
+    private val _selectedDate = MutableLiveData<Long>()
+    val selectedDateTodos = MediatorLiveData<List<TodoItem>>()
 
     init {
         val plantDao = AppDatabase.getDatabase(application).plantDao()
@@ -31,19 +29,26 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         _allTodoItems.addSource(allPlants) { plants ->
             _allTodoItems.value = generateTodoItems(plants)
         }
+
+        selectedDateTodos.addSource(_allTodoItems) { todoMap ->
+            _selectedDate.value?.let { date ->
+                selectedDateTodos.value = todoMap[date] ?: emptyList()
+            }
+        }
+        selectedDateTodos.addSource(_selectedDate) { date ->
+            selectedDateTodos.value = _allTodoItems.value?.get(date) ?: emptyList()
+        }
     }
 
-    // 날짜 선택 시 해당 날짜의 할 일 목록 업데이트
     fun onDateSelected(year: Int, month: Int, dayOfMonth: Int) {
         val calendar = Calendar.getInstance().apply {
             set(year, month, dayOfMonth, 0, 0, 0)
             set(Calendar.MILLISECOND, 0)
         }
         val selectedDateKey = calendar.timeInMillis
-        _selectedDateTodos.value = _allTodoItems.value?.get(selectedDateKey) ?: emptyList()
+        _selectedDate.value = selectedDateKey
     }
 
-    // 식물 목록을 기반으로 전체 할 일 목록 생성
     private fun generateTodoItems(plants: List<PlantItem>?): Map<Long, List<TodoItem>> {
         val todoMap = mutableMapOf<Long, MutableList<TodoItem>>()
         if (plants == null) return todoMap
@@ -51,14 +56,11 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         val today = Calendar.getInstance()
 
         plants.forEach { plant ->
-            // 물 주기 계산
             val waterInterval = plant.wateringCycleMax
             if (waterInterval > 0) {
-                // 식물 등록일로부터 1년치 할 일 생성
                 addTasksToMap(todoMap, plant, TaskType.WATERING, waterInterval, today)
             }
 
-            // 살충제 주기 계산
             val pesticideInterval = plant.pesticideCycleMax
             if (pesticideInterval > 0) {
                 addTasksToMap(todoMap, plant, TaskType.PESTICIDE, pesticideInterval, today)
@@ -67,7 +69,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         return todoMap
     }
 
-    // 반복 주기에 따라 할 일을 맵에 추가하는 헬퍼 함수
     private fun addTasksToMap(
         map: MutableMap<Long, MutableList<TodoItem>>,
         plant: PlantItem,

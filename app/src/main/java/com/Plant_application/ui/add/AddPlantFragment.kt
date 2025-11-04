@@ -97,9 +97,11 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
         observeViewModel()
         handleBackPress()
 
-        args.plantAnalysis?.let { analysis ->
+        if (args.plantAnalysis != null) {
             showToast("추천받은 식물입니다! 닉네임을 정하고 저장해보세요.")
-            viewModel.setRecommendedPlant(analysis, requireContext().applicationContext)
+            viewModel.setRecommendedPlant(args.plantAnalysis!!, requireContext().applicationContext)
+        } else if (viewModel.originalBitmap.value == null) {
+            showImagePickerDialog()
         }
     }
 
@@ -135,14 +137,12 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             binding.textViewPlaceholder.isVisible = !isAnalyzing && viewModel.originalBitmap.value == null
 
             if (isAnalyzing && viewModel.analysisResult.value == null) {
-                // AI가 식물 종류를 분석 중일 때
                 binding.tvAiResultContent.text = "AI가 식물 정보를 생성하는 중입니다..."
                 binding.tvAiResultContent.setTextColor(resources.getColor(R.color.text_secondary, null))
                 binding.cardAiInfo.isVisible = true
                 binding.layoutNickname.isVisible = false
                 binding.btnSave.isVisible = false
             } else if (isAnalyzing && viewModel.analysisResult.value != null) {
-                // 추천 식물의 이미지를 로드 중일 때
                 binding.progressBar.isVisible = true
                 binding.textViewPlaceholder.isVisible = false
             }
@@ -175,10 +175,10 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             if (result != null) {
                 val resultText = buildString {
                     append("🌱 식물명: ${result.official_name}\n")
-                    append("💧 물 주기: ${result.watering_cycle}\n")
+                    append("💧 물 주기: ${result.watering_cycle_min_days}-${result.watering_cycle_max_days}일\n")
                     append("🌡️ 적정 온도: ${result.temp_range}\n")
-                    append("🐛 살충제: ${result.pesticide_cycle}\n")
-                    append("⏳ 수명: ${result.lifespan}\n")
+                    append("🐛 살충제: ${result.pesticide_cycle_min_days}-${result.pesticide_cycle_max_days}일\n")
+                    append("⏳ 수명: ${result.lifespan_min_years}-${result.lifespan_max_years}년\n")
                     append("❤️ 건강도: ${result.health_rating}/5.0")
                 }
                 binding.tvAiResultContent.text = resultText
@@ -219,6 +219,11 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
                 when (which) {
                     0 -> checkCameraPermissionAndOpen()
                     1 -> openGallery()
+                }
+            }
+            .setOnCancelListener {
+                if (viewModel.originalBitmap.value == null && args.plantAnalysis == null) {
+                    findNavController().popBackStack()
                 }
             }
             .show()

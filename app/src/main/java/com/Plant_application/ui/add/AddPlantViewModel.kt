@@ -202,15 +202,23 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         try {
             val prompt = """
                 You are an expert botanist. Analyze the plant in the image and provide a detailed analysis in a strict JSON format without any markdown.
-                Your JSON response MUST contain ONLY the following keys: "is_plant", "official_name", "health_rating", "watering_cycle", "pesticide_cycle", "temp_range", "lifespan".
+                Your JSON response MUST contain ONLY the following keys: 
+                "is_plant", "official_name", "health_rating", "temp_range", 
+                "watering_cycle_min_days", "watering_cycle_max_days", 
+                "pesticide_cycle_min_days", "pesticide_cycle_max_days", 
+                "lifespan_min_years", "lifespan_max_years", "estimated_age_days".
 
                 - "is_plant": (boolean) True if the image contains a plant, otherwise false.
                 - "official_name": (string) The scientific or common official name of the plant in Korean (e.g., "몬스테라 (Monstera deliciosa)").
                 - "health_rating": (float) A health score from 0.0 to 5.0. 5.0 is perfectly healthy.
-                - "watering_cycle": (string) A recommended watering frequency in Korean (e.g., "주 1-2회", "10일에 한 번").
-                - "pesticide_cycle": (string) A recommended pesticide frequency in Korean. If not needed, respond with "필요 없음".
                 - "temp_range": (string) The optimal temperature range for this plant in Korean (e.g., "18-25°C").
-                - "lifespan": (string) The expected lifespan of this plant in Korean (e.g., "수년", "10년 이상").
+                - "watering_cycle_min_days": (int) The minimum recommended days between watering (e.g., 4).
+                - "watering_cycle_max_days": (int) The maximum recommended days between watering (e.g., 7).
+                - "pesticide_cycle_min_days": (int) The minimum recommended days between pesticide use (e.g., 30).
+                - "pesticide_cycle_max_days": (int) The maximum recommended days between pesticide use (e.g., 60). If not needed, respond with 0 for both min and max.
+                - "lifespan_min_years": (int) The minimum expected lifespan in years (e.g., 5).
+                - "lifespan_max_years": (int) The maximum expected lifespan in years (e.g., 10).
+                - "estimated_age_days": (int) Critically analyze the plant in the photo and estimate its current age in DAYS (e.g., 90 for 3 months old).
                 
                 Do NOT include 'image_url'.
                 Return ONLY the JSON object.
@@ -253,6 +261,7 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
 
         _isSaving.value = true
+        val currentTime = System.currentTimeMillis()
 
         viewModelScope.launch {
             try {
@@ -263,10 +272,19 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                     officialName = analysis.official_name ?: "알 수 없음",
                     imageUri = imagePath,
                     healthRating = analysis.health_rating ?: 3.0f,
-                    wateringCycle = analysis.watering_cycle ?: "알 수 없음",
-                    pesticideCycle = analysis.pesticide_cycle ?: "알 수 없음",
                     tempRange = analysis.temp_range ?: "알 수 없음",
-                    lifespan = analysis.lifespan ?: "알 수 없음"
+
+                    wateringCycleMin = analysis.watering_cycle_min_days ?: 4,
+                    wateringCycleMax = analysis.watering_cycle_max_days ?: 7,
+                    pesticideCycleMin = analysis.pesticide_cycle_min_days ?: 0,
+                    pesticideCycleMax = analysis.pesticide_cycle_max_days ?: 0,
+                    lifespanMin = analysis.lifespan_min_years ?: 5,
+                    lifespanMax = analysis.lifespan_max_years ?: 10,
+                    estimatedAge = analysis.estimated_age_days ?: 0,
+
+                    lastWateredTimestamp = currentTime,
+                    lastPesticideTimestamp = currentTime,
+                    timestamp = currentTime
                 )
 
                 withContext(Dispatchers.IO) {

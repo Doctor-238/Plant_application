@@ -50,7 +50,7 @@ class JournalAdapter(
             isItemSelected: (Int) -> Boolean
         ) {
             binding.tvPlantNickname.text = plant.nickname
-            binding.tvWateringInfo.text = "물 주기: ${plant.wateringCycle}"
+            binding.tvWateringInfo.text = "물 주기: ${plant.wateringCycleMin}-${plant.wateringCycleMax}일"
             binding.ratingBarHealth.rating = plant.healthRating
 
             Glide.with(itemView.context).load(Uri.fromFile(File(plant.imageUri))).into(binding.ivPlantImage)

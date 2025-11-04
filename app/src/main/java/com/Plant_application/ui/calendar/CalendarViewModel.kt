@@ -52,14 +52,14 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
         plants.forEach { plant ->
             // 물 주기 계산
-            val waterInterval = parseCycle(plant.wateringCycle)
+            val waterInterval = plant.wateringCycleMax
             if (waterInterval > 0) {
                 // 식물 등록일로부터 1년치 할 일 생성
                 addTasksToMap(todoMap, plant, TaskType.WATERING, waterInterval, today)
             }
 
             // 살충제 주기 계산
-            val pesticideInterval = parseCycle(plant.pesticideCycle)
+            val pesticideInterval = plant.pesticideCycleMax
             if (pesticideInterval > 0) {
                 addTasksToMap(todoMap, plant, TaskType.PESTICIDE, pesticideInterval, today)
             }
@@ -91,16 +91,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             }
             map[dateKey]?.add(TodoItem(plant, taskType, dateKey))
             plantCalendar.add(Calendar.DAY_OF_YEAR, interval)
-        }
-    }
-
-    // "주 1-2회" -> 4, "10일에 한 번" -> 10 과 같이 주기 텍스트를 숫자로 변환
-    private fun parseCycle(cycle: String): Int {
-        return when {
-            "주" in cycle && ("1" in cycle || "2" in cycle) -> 4 // 주 1-2회는 평균 4일로 계산
-            "주" in cycle && "1" in cycle -> 7
-            "일" in cycle -> cycle.filter { it.isDigit() }.toIntOrNull() ?: 0
-            else -> 0
         }
     }
 }

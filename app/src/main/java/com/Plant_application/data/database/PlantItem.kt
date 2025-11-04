@@ -11,9 +11,17 @@ data class PlantItem(
     val officialName: String,
     val imageUri: String,
     val healthRating: Float,
-    val wateringCycle: String,
-    val pesticideCycle: String,
+
+    val wateringCycleMin: Int,
+    val wateringCycleMax: Int,
+    val pesticideCycleMin: Int,
+    val pesticideCycleMax: Int,
     val tempRange: String,
-    val lifespan: String,
+    val lifespanMin: Int,
+    val lifespanMax: Int,
+    val estimatedAge: Int,
+
+    val lastWateredTimestamp: Long = 0L,
+    val lastPesticideTimestamp: Long = 0L,
     val timestamp: Long = System.currentTimeMillis()
 )

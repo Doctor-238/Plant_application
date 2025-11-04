@@ -101,7 +101,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         homeViewModel.weatherInfo.observe(viewLifecycleOwner) { weather ->
             if (weather != null) {
-                binding.cardWeather.isVisible = true
+                binding.cardWeather.visibility = View.VISIBLE
                 binding.tvLocation.text = weather.name
 
                 val weatherCondition = weather.weather.firstOrNull()
@@ -119,7 +119,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 binding.tvTemp.text = String.format(Locale.KOREAN, "%.0f°", weather.main.temp)
                 binding.tvHumidity.text = "${weather.main.humidity}%"
             } else {
-                binding.cardWeather.isVisible = false
+                binding.cardWeather.visibility = View.INVISIBLE
             }
         }
 

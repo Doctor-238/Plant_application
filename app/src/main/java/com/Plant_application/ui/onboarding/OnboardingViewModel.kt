@@ -79,17 +79,25 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     - Humidity (1=Low, 5=High): $humidity
 
                     Provide the response in a strict JSON format without any markdown.
-                    The JSON response MUST contain ONLY the following keys: "is_plant", "official_name", "health_rating", "watering_cycle", "pesticide_cycle", "temp_range", "lifespan".
+                    The JSON response MUST contain ONLY the following keys: 
+                    "is_plant", "official_name", "health_rating", "temp_range", 
+                    "watering_cycle_min_days", "watering_cycle_max_days", 
+                    "pesticide_cycle_min_days", "pesticide_cycle_max_days", 
+                    "lifespan_min_years", "lifespan_max_years", "estimated_age_days".
                     
                     - "is_plant": (boolean) Always true for a recommendation.
                     - "official_name": (string) The **exact Korean Wikipedia page title** for the recommended plant (e.g., "몬스테라", "스파티필룸"). Do NOT include latin names or parentheses.
                     - "health_rating": (float) Set this to 5.0 as it's a new, healthy plant.
-                    - "watering_cycle": (string) A recommended watering frequency for this plant in Korean.
-                    - "pesticide_cycle": (string) A recommended pesticide frequency in Korean. If not needed, respond with "필요 없음".
-                    - "temp_range": (string) The optimal temperature range for this plant in Korean.
-                    - "lifespan": (string) The expected lifespan of this plant in Korean.
+                    - "temp_range": (string) The optimal temperature range for this plant in Korean (e.g., "18-25°C").
+                    - "watering_cycle_min_days": (int) The minimum recommended days between watering (e.g., 4).
+                    - "watering_cycle_max_days": (int) The maximum recommended days between watering (e.g., 7).
+                    - "pesticide_cycle_min_days": (int) The minimum recommended days between pesticide use (e.g., 30).
+                    - "pesticide_cycle_max_days": (int) The maximum recommended days between pesticide use (e.g., 60). If not needed, respond with 0 for both min and max.
+                    - "lifespan_min_years": (int) The minimum expected lifespan in years (e.g., 5).
+                    - "lifespan_max_years": (int) The maximum expected lifespan in years (e.g., 10).
+                    - "estimated_age_days": (int) Set this to 0, as it's a new recommendation.
                     
-                    Do NOT include 'image_url'.
+                    Do NOT include 'image_url' or any other keys.
                     Ensure the response is ONLY the JSON object.
                 """.trimIndent()
 

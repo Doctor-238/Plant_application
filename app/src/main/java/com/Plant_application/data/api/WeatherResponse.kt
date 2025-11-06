@@ -10,7 +10,7 @@ data class WeatherResponse(
     @SerialName("main")
     val main: Main,
     @SerialName("name")
-    val name: String
+    var name: String
 )
 
 @Serializable

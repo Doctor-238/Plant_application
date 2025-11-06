@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_navigation_home_to_plantDetailFragment"
             app:destination="@id/plantDetailFragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_settings"
+            app:destination="@id/navigation_settings" />
     </fragment>
 
     <fragment
@@ -45,6 +48,12 @@
 
     <fragment
         android:id="@+id/navigation_mypage"
+        android:name="com.Plant_application.ui.calendar.CalendarFragment"
+        android:label="fragment_calendar"
+        tools:layout="@layout/fragment_calendar" />
+
+    <fragment
+        android:id="@+id/navigation_settings"
         android:name="com.Plant_application.ui.mypage.MyPageFragment"
         android:label="fragment_my_page"
         tools:layout="@layout/fragment_my_page" />
@@ -57,6 +66,11 @@
         <argument
             android:name="plantAnalysis"
             app:argType="com.Plant_application.ui.add.PlantAnalysis"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="imageUri"
+            app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
     </fragment>

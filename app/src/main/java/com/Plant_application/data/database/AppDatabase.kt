@@ -4,12 +4,28 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 
-// PlantAlarm 엔티티는 아직 사용하지 않으므로 데이터베이스 스키마에서 제외합니다.
-@Database(entities = [PlantItem::class], version = 1, exportSchema = false)
+@Database(entities = [PlantItem::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun plantDao(): PlantDao
+
+    suspend fun clearAllData() {
+        withContext(Dispatchers.IO) {
+            val allPlants = plantDao().getAllPlantsList()
+            allPlants.forEach {
+                try {
+                    File(it.imageUri).delete()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            plantDao().clearAll()
+        }
+    }
 
     companion object {
         @Volatile

@@ -63,25 +63,65 @@
                 style="@style/InfoTextViewStyle"
                 tools:text="건강 상태: ★★★★★" />
             <View style="@style/DividerStyle" />
+
             <TextView
                 android:id="@+id/tv_watering"
                 style="@style/InfoTextViewStyle"
-                tools:text="물 주기: 주 1회" />
+                android:layout_height="wrap_content"
+                android:paddingBottom="4dp"
+                tools:text="물 주기: 4-7일" />
+            <ProgressBar
+                android:id="@+id/pb_water"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="12dp"
+                android:progressDrawable="@drawable/bg_progress_gauge_water"
+                tools:progress="80"
+                tools:secondaryProgress="40"/>
             <View style="@style/DividerStyle" />
+
             <TextView
                 android:id="@+id/tv_pesticide"
                 style="@style/InfoTextViewStyle"
-                tools:text="살충제: 필요 없음" />
+                android:layout_height="wrap_content"
+                android:paddingBottom="4dp"
+                tools:text="살충제: 30-60일" />
+            <ProgressBar
+                android:id="@+id/pb_pesticide"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="12dp"
+                android:progressDrawable="@drawable/bg_progress_gauge_pesticide"
+                tools:progress="100"
+                tools:secondaryProgress="50"/>
             <View style="@style/DividerStyle" />
+
             <TextView
                 android:id="@+id/tv_temp"
                 style="@style/InfoTextViewStyle"
                 tools:text="적정 온도: 18°C ~ 25°C" />
             <View style="@style/DividerStyle" />
+
             <TextView
                 android:id="@+id/tv_lifespan"
                 style="@style/InfoTextViewStyle"
-                tools:text="예상 수명: 10년 이상" />
+                android:layout_height="wrap_content"
+                android:paddingBottom="4dp"
+                tools:text="예상 수명: 5-10년" />
+            <ProgressBar
+                android:id="@+id/pb_lifespan"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="12dp"
+                android:progressDrawable="@drawable/bg_progress_gauge_lifespan"
+                tools:progress="90"
+                tools:secondaryProgress="50"/>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

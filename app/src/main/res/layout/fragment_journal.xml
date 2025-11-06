@@ -82,6 +82,21 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/search_view_delete_journal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_search_spinner"
+                app:iconifiedByDefault="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/iv_select_all"
+                app:layout_constraintStart_toEndOf="@id/iv_back_delete_mode"
+                app:layout_constraintTop_toTopOf="parent"
+                app:queryBackground="@android:color/transparent"
+                app:queryHint="식물 별명 검색"
+                app:searchIcon="@drawable/ic_search" />
+
             <ImageView
                 android:id="@+id/iv_select_all"
                 android:layout_width="32dp"
@@ -116,16 +131,18 @@
         android:id="@+id/separator"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/background"
+        android:background="@color/divider"
         app:layout_constraintTop_toBottomOf="@id/toolbar_container" />
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/view_pager_journal"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/plant_list_container"
+        android:name="com.Plant_application.ui.journal.PlantListFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/separator" />
+        app:layout_constraintTop_toBottomOf="@+id/separator"
+        tools:layout="@layout/fragment_plant_list" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

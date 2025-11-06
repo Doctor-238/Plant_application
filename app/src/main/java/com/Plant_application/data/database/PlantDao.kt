@@ -18,13 +18,30 @@ interface PlantDao {
     @Delete
     suspend fun delete(item: PlantItem)
 
-    @Query("SELECT * FROM plant_items ORDER BY timestamp DESC")
+    @Query("SELECT * FROM plants WHERE (:query = '' OR nickname LIKE '%' || :query || '%') ORDER BY timestamp DESC")
+    fun getPlantsOrderByRecent(query: String): LiveData<List<PlantItem>>
+
+    @Query("SELECT * FROM plants WHERE (:query = '' OR nickname LIKE '%' || :query || '%') ORDER BY timestamp ASC")
+    fun getPlantsOrderByOldest(query: String): LiveData<List<PlantItem>>
+
+    @Query("SELECT * FROM plants WHERE (:query = '' OR nickname LIKE '%' || :query || '%') ORDER BY nickname ASC")
+    fun getPlantsOrderByNameAsc(query: String): LiveData<List<PlantItem>>
+
+    @Query("SELECT * FROM plants WHERE (:query = '' OR nickname LIKE '%' || :query || '%') ORDER BY nickname DESC")
+    fun getPlantsOrderByNameDesc(query: String): LiveData<List<PlantItem>>
+
+    @Query("SELECT * FROM plants WHERE id = :id")
+    fun getPlantById(id: Int): LiveData<PlantItem>
+
+    @Query("SELECT * FROM plants")
     fun getAllPlants(): LiveData<List<PlantItem>>
 
-    @Query("SELECT * FROM plant_items WHERE nickname LIKE '%' || :query || '%' ORDER BY timestamp DESC")
+    @Query("SELECT * FROM plants WHERE nickname LIKE '%' || :query || '%'")
     fun searchPlantsByName(query: String): LiveData<List<PlantItem>>
 
-    // ID로 특정 식물 조회
-    @Query("SELECT * FROM plant_items WHERE id = :id")
-    fun getPlantById(id: Int): LiveData<PlantItem>
+    @Query("SELECT * FROM plants")
+    suspend fun getAllPlantsList(): List<PlantItem>
+
+    @Query("DELETE FROM plants")
+    suspend fun clearAll()
 }

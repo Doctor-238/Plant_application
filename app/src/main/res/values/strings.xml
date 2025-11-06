@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Plant_application</string>
+    <string name="home_desc">홈</string>
+    <string name="calendar_desc">캘린더</string>
+    <string name="alarm_desc">알람</string>
+    <string name="search_desc">검색</string>
 </resources>

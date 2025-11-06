@@ -2,26 +2,53 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="gray">#D9D9D9</color>
 
-    <!-- App Theme Colors -->
-    <color name="primary">#4CAF50</color>
-    <color name="primary_dark">#388E3C</color>
-    <color name="primary_light">#C8E6C9</color>
-    <color name="accent">#8BC34A</color>
+    <color name="background_main">#F4EDDD</color>
+    <color name="background_surface">#FDFBF2</color>
+    <color name="background">#F4EDDD</color>
 
-    <!-- Text Colors -->
-    <color name="text_primary">#212121</color>
+    <color name="card_container">#D9EBCE</color>
+    <color name="card_accent">#79AC78</color>
+    <color name="weather_card_bg">#FDFBF2</color>
+
+    <color name="nav_bar">#D1C6A3</color>
+    <color name="nav_icon">#807454</color>
+    <color name="nav_icon_selected">#5E9A5A</color>
+
+    <color name="text_primary">#000000</color>
     <color name="text_secondary">#757575</color>
     <color name="text_icons">#FFFFFF</color>
 
-    <!-- Specific Component Colors from Error Log -->
+    <color name="plus_button_green">#79AC78</color>
+    <color name="plus_button_beige">#E6DFC6</color>
+
+    <color name="primary">#79AC78</color>
+    <color name="primary_dark">#5E9A5A</color>
+    <color name="primary_light">#D9EBCE</color>
+    <color name="accent">#7FBF8C</color>
+
+    <color name="beige_light">#F7F3EB</color>
+    <color name="beige_dark">#D9CBA8</color>
+    <color name="fab_bg">#E6DFC6</color>
+    <color name="fab_icon">#5E9A5A</color>
+
+    <color name="success_green">#3CB371</color>
+    <color name="warning_orange">#F2A74B</color>
+    <color name="error_red">#E36161</color>
+
     <color name="delete_button_red_active">#F44336</color>
     <color name="delete_button_red_inactive">#BDBDBD</color>
-    <color name="clothing_item_border">#E0E0E0</color> <!-- As per error log, though name is unusual -->
+    <color name="clothing_item_border">#E0E0E0</color>
+    <color name="divider">#D1C6A3</color>
 
+    <color name="card_background_light_green">#E6F5E7</color>
 
-    <!-- Other Colors -->
-    <color name="divider">#BDBDBD</color>
-    <color name="background">#F5F5F5</color>
+    <color name="gauge_water_blue">#2196F3</color>
+    <color name="gauge_water_blue_light">#64B5F6</color>
+    <color name="gauge_pesticide_orange">#F2A74B</color>
+    <color name="gauge_pesticide_orange_light">#FFB74D</color>
+    <color name="gauge_lifespan_green">#4CAF50</color>
+    <color name="gauge_lifespan_green_light">#81C784</color>
+    <color name="gauge_background">#E0E0E0</color>
 </resources>
-

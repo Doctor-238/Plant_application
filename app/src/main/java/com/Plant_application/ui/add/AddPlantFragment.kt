@@ -1,34 +1,27 @@
 package com.Plant_application.ui.add
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.exifinterface.media.ExifInterface
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentAddPlantBinding
-import java.io.File
 import java.io.InputStream
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
@@ -39,147 +32,139 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
     private val viewModel: AddPlantViewModel by viewModels()
     private val args: AddPlantFragmentArgs by navArgs()
 
-    private lateinit var onBackPressedCallback: OnBackPressedCallback
-    private var toast: Toast? = null
-    private var tempImageUri: Uri? = null
-
-    private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            tempImageUri?.let { uri ->
-                val bitmap = getCorrectlyOrientedBitmap(uri)
-                if (bitmap != null) {
-                    viewModel.onImageSelected(bitmap, getString(R.string.gemini_api_key))
-                } else {
-                    showToast("사진을 불러오는 데 실패했습니다.")
-                }
-            }
-        }
-    }
-
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            val bitmap = getCorrectlyOrientedBitmap(it)
-            if (bitmap != null) {
-                viewModel.onImageSelected(bitmap, getString(R.string.gemini_api_key))
-            } else {
-                showToast("이미지를 불러오는 데 실패했습니다.")
-            }
-        }
-    }
+    private var selectedBitmap: Bitmap? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddPlantBinding.bind(view)
 
-        args.plantAnalysis?.let { analysis ->
-            viewModel.setInitialAnalysis(analysis)
-            binding.textViewPlaceholder.text = "추천받은 식물의 사진을 추가해주세요!"
+        setupToolbar()
+        setupButtons()
+        observeViewModel()
+        handleBackPress()
+
+        if (args.plantAnalysis != null) {
+            showToast("추천받은 식물입니다! 닉네임을 정하고 저장해보세요.")
+            viewModel.setRecommendedPlant(args.plantAnalysis!!, requireContext().applicationContext)
+        } else if (args.imageUri != null) {
+            val uri = Uri.parse(args.imageUri)
+            val bitmap = getCorrectlyOrientedBitmap(uri)
+            if (bitmap != null) {
+                viewModel.analyzePlantImage(bitmap)
+            } else {
+                showToast("이미지를 불러올 수 없습니다.")
+                findNavController().popBackStack()
+            }
+        }
+    }
+
+    private fun setupToolbar() {
+        binding.toolbar.setNavigationOnClickListener {
+            handleBackButton()
+        }
+    }
+
+    private fun setupButtons() {
+        binding.btnSave.setOnClickListener {
+            hideKeyboard()
+            val nickname = binding.etNickname.text?.toString() ?: ""
+            viewModel.savePlantToDatabase(nickname)
         }
 
-        setupListeners()
-        setupBackButtonHandler()
-        observeViewModel()
+        binding.etNickname.addTextChangedListener {
+            viewModel.clearError()
+        }
     }
 
     private fun observeViewModel() {
         viewModel.isAiAnalyzing.observe(viewLifecycleOwner) { isAnalyzing ->
             binding.progressBar.isVisible = isAnalyzing
-            binding.buttonSave.isEnabled = !isAnalyzing && viewModel.originalBitmap.value != null && !binding.editTextPlantNickname.text.isNullOrBlank()
-            if (isAnalyzing) {
-                binding.cardAiInfo.isVisible = false
+            binding.textViewPlaceholder.isVisible = !isAnalyzing && viewModel.originalBitmap.value == null
+
+            if (isAnalyzing && viewModel.analysisResult.value == null) {
+                binding.tvAiResultContent.text = "AI가 식물 정보를 생성하는 중입니다..."
+                binding.tvAiResultContent.setTextColor(resources.getColor(R.color.text_secondary, null))
+                binding.cardAiInfo.isVisible = true
+                binding.layoutNickname.isVisible = false
+                binding.btnSave.isVisible = false
+            } else if (isAnalyzing && viewModel.analysisResult.value != null) {
+                binding.progressBar.isVisible = true
+                binding.textViewPlaceholder.isVisible = false
             }
         }
 
         viewModel.isSaving.observe(viewLifecycleOwner) { isSaving ->
-            binding.savingOverlay.isVisible = isSaving
+            binding.btnSave.isEnabled = !isSaving
+            binding.btnSave.text = if (isSaving) "저장 중..." else "저장하기"
         }
 
         viewModel.originalBitmap.observe(viewLifecycleOwner) { bitmap ->
             if (bitmap != null) {
-                binding.textViewPlaceholder.isVisible = false
-                binding.imageViewPlantPreview.isVisible = true
-                binding.imageViewPlantPreview.setImageBitmap(bitmap)
+                displayImage(bitmap)
+                binding.frameLayoutPreview.isClickable = false
             } else {
-                binding.textViewPlaceholder.isVisible = true
+                selectedBitmap = null
+                binding.imageViewPlantPreview.setImageBitmap(null)
                 binding.imageViewPlantPreview.isVisible = false
-                binding.imageViewPlantPreview.setImageDrawable(null)
+                binding.textViewPlaceholder.isVisible = true
                 binding.cardAiInfo.isVisible = false
+                binding.layoutNickname.isVisible = false
+                binding.btnSave.isVisible = false
+                binding.frameLayoutPreview.isClickable = true
             }
         }
 
         viewModel.analysisResult.observe(viewLifecycleOwner) { result ->
-            binding.cardAiInfo.isVisible = result != null
             if (result != null) {
-                binding.tvInfoOfficialName.text = "공식 이름: ${result.official_name ?: "정보 없음"}"
-                binding.tvInfoHealth.text = "건강 상태: ${"★".repeat(result.health_rating?.toInt() ?: 0)}${"☆".repeat(5 - (result.health_rating?.toInt() ?: 0))}"
-                binding.tvInfoWatering.text = "물 주기: ${result.watering_cycle ?: "정보 없음"}"
-                binding.tvInfoPesticide.text = "살충제: ${result.pesticide_cycle ?: "정보 없음"}"
-                binding.tvInfoTemp.text = "적정 온도: ${result.temp_range ?: "정보 없음"}"
-                binding.tvInfoLifespan.text = "예상 수명: ${result.lifespan ?: "정보 없음"}"
+                val waterRange = formatRange(result.watering_cycle_min_days ?: 0, result.watering_cycle_max_days ?: 0, "일")
+                val pesticideRange = formatRange(result.pesticide_cycle_min_days ?: 0, result.pesticide_cycle_max_days ?: 0, "일")
+                val lifespanRange = formatRange(result.lifespan_min_years ?: 0, result.lifespan_max_years ?: 0, "년")
+
+                val resultText = buildString {
+                    append("🌱 식물명: ${result.official_name}\n")
+                    append("💧 물 주기: $waterRange\n")
+                    append("🌡️ 적정 온도: ${result.temp_range}\n")
+                    append("🐛 살충제: $pesticideRange\n")
+                    append("⏳ 수명: $lifespanRange\n")
+                    append("❤️ 건강도: ${result.health_rating}/5.0")
+                }
+                binding.tvAiResultContent.text = resultText
+                binding.tvAiResultContent.setTextColor(resources.getColor(R.color.text_primary, null))
+                binding.cardAiInfo.isVisible = true
+                binding.layoutNickname.isVisible = true
+                binding.btnSave.isVisible = true
             }
         }
 
-        viewModel.isSaveCompleted.observe(viewLifecycleOwner) { isCompleted ->
-            if (isCompleted) {
-                findNavController().popBackStack()
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                showToast(it)
+                viewModel.clearError()
             }
         }
 
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (!message.isNullOrEmpty()) {
-                showToast(message, Toast.LENGTH_LONG)
-                viewModel.clearErrorMessage()
-            }
-        }
+        viewModel.saveComplete.observe(viewLifecycleOwner) { isComplete ->
+            if (isComplete) {
+                showToast("식물이 저장되었습니다!")
 
-        viewModel.hasChanges.observe(viewLifecycleOwner) { hasChanges ->
-            onBackPressedCallback.isEnabled = hasChanges
-        }
-    }
-
-    private fun setupListeners() {
-        binding.toolbar.setNavigationOnClickListener { handleBackButton() }
-        binding.frameLayoutPreview.setOnClickListener { showImagePickerDialog() }
-        binding.buttonSave.setOnClickListener { savePlantItem() }
-
-        binding.editTextPlantNickname.addTextChangedListener { editable ->
-            binding.buttonSave.isEnabled = (viewModel.isAiAnalyzing.value == false) &&
-                    (viewModel.originalBitmap.value != null) &&
-                    !editable.isNullOrBlank()
-        }
-    }
-
-    private fun showImagePickerDialog() {
-        if (viewModel.isAiAnalyzing.value == true) return
-        val options = arrayOf("카메라로 촬영", "갤러리에서 선택")
-        AlertDialog.Builder(requireContext())
-            .setTitle("사진 추가")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> openCamera()
-                    1 -> openGallery()
+                if (args.plantAnalysis != null) {
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.onboardingFragment, true)
+                        .build()
+                    findNavController().navigate(R.id.navigation_home, null, navOptions)
+                } else {
+                    findNavController().popBackStack()
                 }
             }
-            .show()
-    }
-
-    private fun openCamera() {
-        val file = createTempImageFile()
-        tempImageUri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.provider", file)
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, tempImageUri)
         }
-        takePictureLauncher.launch(intent)
     }
 
-    private fun openGallery() {
-        pickImageLauncher.launch("image/*")
-    }
-
-    private fun createTempImageFile(): File {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val storageDir = requireContext().cacheDir
-        return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
+    private fun formatRange(min: Int, max: Int, unit: String): String {
+        return when {
+            max <= 0 -> "필요 없음"
+            min == max -> "$max$unit"
+            else -> "$min-$max$unit"
+        }
     }
 
     private fun getCorrectlyOrientedBitmap(uri: Uri): Bitmap? {
@@ -189,15 +174,17 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream.close()
 
-            inputStream = requireContext().contentResolver.openInputStream(uri) ?: return originalBitmap
-            val exifInterface = ExifInterface(inputStream)
-            val orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+            inputStream = requireContext().contentResolver.openInputStream(uri)
+            val exif = inputStream?.let { ExifInterface(it) }
+            val orientation = exif?.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) ?: ExifInterface.ORIENTATION_NORMAL
+
             val matrix = Matrix()
             when (orientation) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
                 ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
                 ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
             }
+
             Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.width, originalBitmap.height, matrix, true)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -207,56 +194,71 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
         }
     }
 
-    private fun savePlantItem() {
-        val nickname = binding.editTextPlantNickname.text.toString().trim()
-        if (nickname.isEmpty()) {
-            showToast("식물 별명을 입력해주세요.")
-            return
-        }
-        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-        imm?.hideSoftInputFromWindow(view?.windowToken, 0)
-        viewModel.savePlant(nickname)
+    private fun displayImage(bitmap: Bitmap) {
+        selectedBitmap = bitmap
+        binding.imageViewPlantPreview.setImageBitmap(bitmap)
+        binding.imageViewPlantPreview.isVisible = true
+        binding.textViewPlaceholder.isVisible = false
     }
 
-    private fun setupBackButtonHandler() {
-        onBackPressedCallback = object : OnBackPressedCallback(false) {
+    private fun handleBackPress() {
+        val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                showCancelDialog()
+                if (viewModel.isAiAnalyzing.value == true || viewModel.isSaving.value == true) {
+                    showToast("작업이 진행 중입니다.")
+                    return
+                }
+
+                val cameFromOnboarding = args.plantAnalysis != null
+
+                if (cameFromOnboarding) {
+                    viewModel.resetState()
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.onboardingFragment, true)
+                        .build()
+                    findNavController().navigate(R.id.navigation_home, null, navOptions)
+                    return
+                }
+
+                val hasChanges = selectedBitmap != null
+
+                val exitAction = {
+                    viewModel.resetState()
+                    findNavController().popBackStack()
+                }
+
+                if (hasChanges) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("페이지 나가기")
+                        .setMessage("변경사항이 저장되지 않았습니다. 정말 나가시겠습니까?")
+                        .setPositiveButton("나가기") { _, _ -> exitAction() }
+                        .setNegativeButton("취소", null)
+                        .show()
+                } else {
+                    exitAction()
+                }
             }
         }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressedCallback)
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
     private fun handleBackButton() {
-        if (viewModel.isSaving.value == true) return
-        if (onBackPressedCallback.isEnabled) {
-            showCancelDialog()
-        } else {
-            findNavController().popBackStack()
-        }
+        requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
-    private fun showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
-        toast?.cancel()
-        toast = Toast.makeText(requireContext(), message, duration)
-        toast?.show()
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun showCancelDialog() {
-        AlertDialog.Builder(requireContext())
-            .setMessage("작업을 취소하시겠습니까? 변경사항이 저장되지 않습니다.")
-            .setPositiveButton("예") { _, _ ->
-                viewModel.resetAllState()
-                findNavController().popBackStack()
-            }
-            .setNegativeButton("아니오", null)
-            .show()
+    private fun hideKeyboard() {
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        onBackPressedCallback.remove()
-        toast?.cancel()
+        selectedBitmap?.recycle()
+        selectedBitmap = null
         _binding = null
     }
 }

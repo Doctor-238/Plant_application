@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottom_nav_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <!-- 🔹 하단 네비게이션 바 -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="@drawable/bg_bottom_nav_bar"
+        android:elevation="8dp"
+        android:layout_gravity="bottom"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemIconSize="28dp"
+        app:itemIconTint="@color/nav_icon"
+        app:itemRippleColor="@android:color/transparent"
+        app:labelVisibilityMode="unlabeled"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+
+    <!-- 🔹 중앙 카메라 원 -->
+    <FrameLayout
+        android:id="@+id/camera_circle_container"
+        android:layout_width="90dp"
+        android:layout_height="92dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        android:layout_marginBottom="-45dp"
+        android:elevation="12dp"
+        android:translationZ="12dp">
+
+        <!-- 바깥 흰 원 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_white_circle" />
+
+        <!-- 안쪽 베이지 원 -->
+        <View
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_inner_circle" />
+
+        <!-- 카메라 아이콘 -->
+        <ImageView
+            android:id="@+id/iv_camera_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:src="@drawable/camera"
+            app:tint="@color/nav_icon" />
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

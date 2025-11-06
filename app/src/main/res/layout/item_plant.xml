@@ -3,33 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="120dp"
+    android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/card_background_light_green"
     app:cardCornerRadius="16dp"
     app:cardElevation="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp">
 
         <ImageView
             android:id="@+id/iv_plant_image"
-            android:layout_width="120dp"
+            android:layout_width="90dp"
             android:layout_height="0dp"
+            android:layout_margin="12dp"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:src="@tools:sample/backgrounds/scenic" />
+            tools:src="@drawable/plant2" />
 
         <TextView
             android:id="@+id/tv_plant_nickname"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:layout_marginEnd="16dp"
-            android:textColor="@color/black"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -38,24 +41,99 @@
             tools:text="우리집 몬스테라" />
 
         <TextView
-            android:id="@+id/tv_plant_official_name"
-            android:layout_width="0dp"
+            android:id="@+id/tv_water_info"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            app:layout_constraintEnd_toEndOf="@id/tv_plant_nickname"
+            android:layout_marginTop="8dp"
+            android:text="물 게이지"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
             app:layout_constraintStart_toStartOf="@id/tv_plant_nickname"
-            app:layout_constraintTop_toBottomOf="@id/tv_plant_nickname"
-            tools:text="Monstera deliciosa" />
+            app:layout_constraintTop_toBottomOf="@id/tv_plant_nickname" />
+
+        <ProgressBar
+            android:id="@+id/pb_water_gauge"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_marginTop="2dp"
+            android:progressDrawable="@drawable/bg_progress_gauge_water"
+            app:layout_constraintEnd_toEndOf="@id/tv_plant_nickname"
+            app:layout_constraintStart_toStartOf="@id/tv_water_info"
+            app:layout_constraintTop_toBottomOf="@id/tv_water_info"
+            tools:progress="50"
+            tools:secondaryProgress="70"/>
 
         <TextView
-            android:id="@+id/tv_watering_info"
-            android:layout_width="0dp"
+            android:id="@+id/tv_pesticide_info"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/tv_plant_nickname"
-            app:layout_constraintStart_toStartOf="@id/tv_plant_nickname"
-            tools:text="물주기: 주 1-2회" />
+            android:layout_marginTop="4dp"
+            android:text="면역 게이지 (살충제)"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@id/pb_water_gauge"
+            app:layout_constraintTop_toBottomOf="@id/pb_water_gauge" />
+
+        <ProgressBar
+            android:id="@+id/pb_pesticide_gauge"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_marginTop="2dp"
+            android:progressDrawable="@drawable/bg_progress_gauge_pesticide"
+            app:layout_constraintEnd_toEndOf="@id/pb_water_gauge"
+            app:layout_constraintStart_toStartOf="@id/tv_pesticide_info"
+            app:layout_constraintTop_toBottomOf="@id/tv_pesticide_info"
+            tools:progress="70"
+            tools:secondaryProgress="80"/>
+
+        <TextView
+            android:id="@+id/tv_lifespan_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="예상 수명:"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@id/pb_pesticide_gauge"
+            app:layout_constraintTop_toBottomOf="@id/pb_pesticide_gauge" />
+
+        <TextView
+            android:id="@+id/tv_lifespan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_lifespan_label"
+            app:layout_constraintStart_toEndOf="@id/tv_lifespan_label"
+            tools:text="10년" />
+
+        <Button
+            android:id="@+id/btn_water_check"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="물 주기"
+            android:minHeight="0dp"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="8dp"
+            app:layout_constraintEnd_toStartOf="@id/btn_pesticide_check"
+            app:layout_constraintTop_toBottomOf="@id/pb_pesticide_gauge"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <Button
+            android:id="@+id/btn_pesticide_check"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="살충"
+            android:minHeight="0dp"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="8dp"
+            app:layout_constraintEnd_toEndOf="@id/pb_pesticide_gauge"
+            app:layout_constraintTop_toTopOf="@id/btn_water_check" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

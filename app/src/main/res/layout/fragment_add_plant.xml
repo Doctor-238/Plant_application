@@ -4,18 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/background_main"
     tools:context=".ui.add.AddPlantFragment">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
+        android:background="@color/background_surface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/nav_icon"
         app:title="내 식물 추가하기"
+        app:titleTextColor="@color/text_primary"
         app:titleCentered="true"/>
 
     <ScrollView
@@ -58,7 +61,7 @@
                     android:drawablePadding="8dp"
                     android:gravity="center"
                     android:text="클릭하여 식물 사진을 추가하세요"
-                    android:textColor="#6B7281"
+                    android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:visibility="visible"
                     tools:visibility="visible" />
@@ -68,6 +71,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="fitCenter"
+                    android:contentDescription="식물 미리보기"
                     android:visibility="invisible"
                     tools:visibility="visible" />
 
@@ -77,6 +81,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:indeterminateTint="@color/primary"
                     android:visibility="gone" />
             </FrameLayout>
 
@@ -85,11 +90,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:visibility="gone"
-                app:cardBackgroundColor="#F9F9F9"
+                app:cardBackgroundColor="@color/card_container"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                app:cardElevation="2dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/frameLayout_preview"
@@ -99,82 +104,70 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="8dp">
+                    android:padding="16dp">
 
-                    <TextView android:id="@+id/tv_info_official_name" style="@style/InfoTextViewStyle" tools:text="공식 이름: 몬스테라 델리시오사"/>
-                    <View style="@style/DividerStyle" />
-                    <TextView android:id="@+id/tv_info_health" style="@style/InfoTextViewStyle" tools:text="건강 상태: ★★★★★"/>
-                    <View style="@style/DividerStyle" />
-                    <TextView android:id="@+id/tv_info_watering" style="@style/InfoTextViewStyle" tools:text="물 주기: 주 1회"/>
-                    <View style="@style/DividerStyle" />
-                    <TextView android:id="@+id/tv_info_pesticide" style="@style/InfoTextViewStyle" tools:text="살충제: 필요 없음"/>
-                    <View style="@style/DividerStyle" />
-                    <TextView android:id="@+id/tv_info_temp" style="@style/InfoTextViewStyle" tools:text="적정 온도: 18°C ~ 25°C"/>
-                    <View style="@style/DividerStyle" />
-                    <TextView android:id="@+id/tv_info_lifespan" style="@style/InfoTextViewStyle" tools:text="예상 수명: 10년 이상"/>
+                    <TextView
+                        android:id="@+id/tv_ai_result_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI 분석 결과"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_ai_result_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"
+                        tools:text="AI 분석 결과가 여기에 표시됩니다." />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayout_nickname"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:id="@+id/layout_nickname"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="24dp"
-                android:hint="식물 별명을 입력해주세요 (최대 20자)"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusTopStart="12dp"
-                app:counterEnabled="true"
-                app:counterMaxLength="20"
+                android:layout_marginTop="16dp"
+                android:hint="식물 별명 (선택사항)"
+                android:visibility="gone"
+                app:boxBackgroundColor="@color/background_surface"
+                app:hintTextColor="@color/text_secondary"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/card_ai_info">
+                app:layout_constraintTop_toBottomOf="@id/card_ai_info"
+                tools:visibility="visible">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editText_plant_nickname"
+                    android:id="@+id/et_nickname"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:maxLength="20" />
+                    android:maxLength="20"
+                    android:textColor="@color/text_primary" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/button_save"
-                style="@style/Widget.Material3.Button.UnelevatedButton"
-                android:layout_width="wrap_content"
+                android:id="@+id/btn_save"
+                android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="32dp"
-                android:enabled="false"
-                android:paddingHorizontal="48dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="@color/primary"
                 android:text="저장하기"
+                android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:cornerRadius="24dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textInputLayout_nickname" />
+                app:layout_constraintTop_toBottomOf="@id/layout_nickname"
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
-
-    <FrameLayout
-        android:id="@+id/saving_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#80000000"
-        android:clickable="true"
-        android:focusable="true"
-        android:visibility="gone">
-
-        <ProgressBar
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
-    </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

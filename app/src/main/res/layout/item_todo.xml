@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/card_container"
     android:orientation="horizontal"
     android:paddingVertical="12dp"
+    android:paddingHorizontal="16dp"
+    android:layout_marginBottom="8dp"
     android:gravity="center_vertical">
 
     <CheckBox
         android:id="@+id/checkbox_todo"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:buttonTint="@color/card_accent"/>
 
     <TextView
         android:id="@+id/tv_todo_title"

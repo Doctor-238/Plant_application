@@ -69,18 +69,21 @@ dependencies {
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
-    // 네트워킹
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    // 네트워킹 (버전 통일 및 중복 제거)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0") // 2.11.0 버전으로 통일
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0") // 4.12.0 버전으로 통일
 
     // 비동기 처리
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
 
     // AI 기능
     implementation("com.google.ai.client.generativeai:generativeai:0.6.0")
     implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta5")
-    // [확인] SDK가 사용하는 직렬화 라이브러리
+    // [확인] SDK가 사용하는 직렬화 라이브러리 (중복 제거)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     // 위치 정보
@@ -91,16 +94,13 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    // 기타 유틸리티
     implementation("com.github.bumptech.glide:glide:4.16.0")
     kapt("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+
 }

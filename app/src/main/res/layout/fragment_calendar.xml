@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_main"
     android:orientation="vertical"
     android:padding="16dp"
     tools:context=".ui.calendar.CalendarFragment">
@@ -11,6 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="나의 일정"
+        android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold" />
 
@@ -18,13 +20,15 @@
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:background="@color/background_surface" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="To-Do List"
+        android:textColor="@color/text_primary"
         android:textSize="18sp"
         android:textStyle="bold" />
 
@@ -43,6 +47,7 @@
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="예정된 할 일이 없습니다."
+        android:textColor="@color/text_secondary"
         android:visibility="gone"
         tools:visibility="visible"/>
 

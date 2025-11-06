@@ -1,29 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item
         android:id="@+id/navigation_home"
-        android:icon="@drawable/ic_home"
-        android:title="홈" />
+        android:icon="@drawable/home"
+        android:title="" />
 
     <item
-        android:id="@+id/navigation_journal"
-        android:icon="@drawable/ic_journal"
-        android:title="성장일지" />
+        android:id="@+id/navigation_calendar"
+        android:icon="@drawable/calendar"
+        android:title="" />
+
+    <!-- 가운데 빈 공간 (카메라 자리 확보용) -->
+    <item
+        android:id="@+id/navigation_placeholder"
+        android:enabled="false"
+        android:icon="@android:color/transparent"
+        android:title="" />
 
     <item
-        android:id="@+id/navigation_add_plant"
-        android:icon="@drawable/ic_camera"
+        android:id="@+id/navigation_alarm"
+        android:icon="@drawable/alarm"
         android:title="" />
 
     <item
         android:id="@+id/navigation_search"
-        android:icon="@drawable/ic_search"
-        android:title="검색" />
-
-    <item
-        android:id="@+id/navigation_mypage"
-        android:icon="@drawable/ic_person"
-        android:title="마이페이지" />
-
+        android:icon="@drawable/search"
+        android:title="" />
 </menu>

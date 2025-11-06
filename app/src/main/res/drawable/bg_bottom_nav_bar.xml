@@ -1,0 +1,11 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 바 색상 -->
+    <solid android:color="@color/nav_bar" />
+
+    <!-- 둥근 모서리 설정 -->
+    <corners android:radius="24dp" />
+
+    <!-- 위쪽 그림자처럼 살짝 위로 띄우기 -->
+    <padding android:top="4dp" />
+</shape>

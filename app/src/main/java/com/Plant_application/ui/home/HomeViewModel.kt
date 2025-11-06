@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.location.Location
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -21,16 +22,20 @@ import com.Plant_application.data.repository.WeatherRepository
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.util.Locale
 
 @SuppressLint("MissingPermission")
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val weatherRepository: WeatherRepository
     private val plantRepository: PlantRepository
+    private val geocoder = Geocoder(application, Locale.KOREAN)
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
     private var fetchJob: Job? = null
@@ -98,15 +103,46 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         return fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+            Priority.PRIORITY_HIGH_ACCURACY,
             cancellationTokenSource.token
         ).await()
     }
 
+    @Suppress("DEPRECATION")
+    private suspend fun getAddressFromLocation(location: Location): String? = withContext(Dispatchers.IO) {
+        try {
+            val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+            if (addresses.isNullOrEmpty()) {
+                return@withContext null
+            }
+            val address = addresses[0]
+            val locality = address.locality
+            val subLocality = address.subLocality
+
+            when {
+                !locality.isNullOrBlank() && !subLocality.isNullOrBlank() -> "$locality, $subLocality"
+                !locality.isNullOrBlank() -> locality
+                !subLocality.isNullOrBlank() -> subLocality
+                else -> address.adminArea
+            }
+        } catch (e: IOException) {
+            Log.e("HomeViewModel", "Geocoder 실패", e)
+            null
+        }
+    }
+
+
     private suspend fun fetchWeatherForLocation(location: Location, apiKey: String) {
         val response = weatherRepository.getCurrentWeather(location.latitude, location.longitude, apiKey)
         if (response.isSuccessful && response.body() != null) {
-            _weatherInfo.postValue(response.body())
+            val weatherData = response.body()!!
+            val addressName = getAddressFromLocation(location)
+
+            if (!addressName.isNullOrBlank()) {
+                weatherData.name = addressName
+            }
+
+            _weatherInfo.postValue(weatherData)
         } else {
             val errorBody = response.errorBody()?.string() ?: "알 수 없는 오류"
             throw IOException("날씨 정보를 가져오는 데 실패했습니다: ${response.code()} $errorBody")
@@ -126,6 +162,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onErrorShown() {
         _error.value = null
+    }
+
+    fun updateLastWatered(plant: PlantItem) {
+        viewModelScope.launch {
+            val updatedPlant = plant.copy(lastWateredTimestamp = System.currentTimeMillis())
+            plantRepository.updatePlant(updatedPlant)
+        }
+    }
+
+    fun updateLastPesticide(plant: PlantItem) {
+        viewModelScope.launch {
+            val updatedPlant = plant.copy(lastPesticideTimestamp = System.currentTimeMillis())
+            plantRepository.updatePlant(updatedPlant)
+        }
     }
 
     override fun onCleared() {

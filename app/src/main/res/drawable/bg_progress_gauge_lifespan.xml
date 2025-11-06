@@ -10,7 +10,7 @@
         <clip>
             <shape>
                 <corners android:radius="4dp" />
-                <solid android:color="@color/gauge_pesticide_orange" />
+                <solid android:color="@color/gauge_lifespan_green" />
             </shape>
         </clip>
     </item>
@@ -18,7 +18,7 @@
         <clip>
             <shape>
                 <corners android:radius="4dp" />
-                <solid android:color="@color/gauge_pesticide_orange_light" />
+                <solid android:color="@color/gauge_lifespan_green_light" />
             </shape>
         </clip>
     </item>

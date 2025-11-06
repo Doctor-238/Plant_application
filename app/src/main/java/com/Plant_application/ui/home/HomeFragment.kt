@@ -72,10 +72,20 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupRecyclerView() {
-        plantAdapter = PlantAdapter { plant ->
-            val action = HomeFragmentDirections.actionNavigationHomeToPlantDetailFragment(plant.id)
-            findNavController().navigate(action)
-        }
+        plantAdapter = PlantAdapter(
+            onItemClicked = { plant ->
+                val action = HomeFragmentDirections.actionNavigationHomeToPlantDetailFragment(plant.id)
+                findNavController().navigate(action)
+            },
+            onWaterClicked = { plant ->
+                homeViewModel.updateLastWatered(plant)
+                showToast("${plant.nickname} 물 주기 완료!")
+            },
+            onPesticideClicked = { plant ->
+                homeViewModel.updateLastPesticide(plant)
+                showToast("${plant.nickname} 살충 완료!")
+            }
+        )
         binding.rvPlants.adapter = plantAdapter
     }
 
@@ -90,10 +100,18 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             if (binding.swipeRefreshLayout.isRefreshing != isLoading) {
                 binding.swipeRefreshLayout.isRefreshing = isLoading
             }
+            if (isLoading) {
+                binding.groupWeatherData.visibility = View.GONE
+                binding.tvWeatherPlaceholder.visibility = View.VISIBLE
+                binding.tvWeatherPlaceholder.text = "날씨 정보 로딩 중..."
+            }
         }
 
         homeViewModel.error.observe(viewLifecycleOwner) { error ->
             error?.let {
+                binding.groupWeatherData.visibility = View.GONE
+                binding.tvWeatherPlaceholder.visibility = View.VISIBLE
+                binding.tvWeatherPlaceholder.text = it
                 showToast(it)
                 homeViewModel.onErrorShown()
             }
@@ -101,9 +119,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         homeViewModel.weatherInfo.observe(viewLifecycleOwner) { weather ->
             if (weather != null) {
-                binding.cardWeather.visibility = View.VISIBLE
-                binding.tvLocation.text = weather.name
+                binding.groupWeatherData.visibility = View.VISIBLE
+                binding.tvWeatherPlaceholder.visibility = View.GONE
 
+                binding.tvLocation.text = weather.name
                 val weatherCondition = weather.weather.firstOrNull()
                 if (weatherCondition != null) {
                     val description = weatherCondition.description.replaceFirstChar {
@@ -118,8 +137,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
                 binding.tvTemp.text = String.format(Locale.KOREAN, "%.0f°", weather.main.temp)
                 binding.tvHumidity.text = "${weather.main.humidity}%"
-            } else {
-                binding.cardWeather.visibility = View.INVISIBLE
+            } else if (homeViewModel.isLoading.value == false) {
+                binding.groupWeatherData.visibility = View.GONE
+                binding.tvWeatherPlaceholder.visibility = View.VISIBLE
+                binding.tvWeatherPlaceholder.text = "날씨 정보를 불러올 수 없습니다."
             }
         }
 

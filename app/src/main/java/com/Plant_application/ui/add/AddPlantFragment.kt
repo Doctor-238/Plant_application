@@ -167,16 +167,48 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
         }
     }
 
+    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        val (height: Int, width: Int) = options.run { outHeight to outWidth }
+        var inSampleSize = 1
+
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+
     private fun getCorrectlyOrientedBitmap(uri: Uri): Bitmap? {
         var inputStream: InputStream? = null
         return try {
             inputStream = requireContext().contentResolver.openInputStream(uri) ?: return null
-            val originalBitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeStream(inputStream, null, options)
+            inputStream?.close()
+
+            val (height: Int, width: Int) = options.run { outHeight to outWidth }
+            val (reqWidth, reqHeight) = if (width > height) {
+                1920 to 1080
+            } else {
+                1080 to 1920
+            }
+
+            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
+            options.inJustDecodeBounds = false
+
+            inputStream = requireContext().contentResolver.openInputStream(uri) ?: return null
+            val scaledBitmap = BitmapFactory.decodeStream(inputStream, null, options) ?: return null
+            inputStream?.close()
 
             inputStream = requireContext().contentResolver.openInputStream(uri)
             val exif = inputStream?.let { ExifInterface(it) }
-            val orientation = exif?.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) ?: ExifInterface.ORIENTATION_NORMAL
+            val orientation = exif?.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+                ?: ExifInterface.ORIENTATION_NORMAL
+            inputStream?.close()
 
             val matrix = Matrix()
             when (orientation) {
@@ -185,7 +217,7 @@ class AddPlantFragment : Fragment(R.layout.fragment_add_plant) {
                 ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
             }
 
-            Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.width, originalBitmap.height, matrix, true)
+            Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.width, scaledBitmap.height, matrix, true)
         } catch (e: Exception) {
             e.printStackTrace()
             null

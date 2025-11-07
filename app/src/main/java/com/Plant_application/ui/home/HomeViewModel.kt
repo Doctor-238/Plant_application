@@ -81,9 +81,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     throw SecurityException("위치 권한이 없습니다.")
                 }
                 val location = getFreshLocation()
-                val apiKey = getApplication<Application>().getString(R.string.openweathermap_api_key)
-                fetchWeatherForLocation(location, apiKey)
-
+                if (location != null) {
+                    val apiKey = getApplication<Application>().getString(R.string.openweathermap_api_key)
+                    fetchWeatherForLocation(location, apiKey)
+                } else {
+                    throw IOException("위치 정보를 가져올 수 없습니다. GPS 및 네트워크 연결을 확인하세요.")
+                }
             } catch (e: Exception) {
                 handleFetchError(e)
             } finally {
@@ -92,7 +95,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun getFreshLocation(): Location {
+    private suspend fun getFreshLocation(): Location? {
         try {
             val lastLocation = fusedLocationClient.lastLocation.await()
             if (lastLocation != null && (System.currentTimeMillis() - lastLocation.time) < 600000) {
@@ -102,10 +105,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             Log.w("HomeViewModel", "마지막 위치 가져오기 실패", e)
         }
 
-        return fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            cancellationTokenSource.token
-        ).await()
+        return try {
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                cancellationTokenSource.token
+            ).await()
+        } catch (e: Exception) {
+            Log.e("HomeViewModel", "getCurrentLocation 실패", e)
+            null
+        }
     }
 
     @Suppress("DEPRECATION")

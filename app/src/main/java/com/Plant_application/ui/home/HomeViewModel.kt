@@ -17,6 +17,7 @@ import com.Plant_application.data.api.WeatherApiService
 import com.Plant_application.data.api.WeatherResponse
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.PlantItem
+import com.Plant_application.data.preference.PreferenceManager
 import com.Plant_application.data.repository.PlantRepository
 import com.Plant_application.data.repository.WeatherRepository
 import com.google.android.gms.location.LocationServices
@@ -35,6 +36,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val weatherRepository: WeatherRepository
     private val plantRepository: PlantRepository
+    private val prefs: PreferenceManager
     private val geocoder = Geocoder(application, Locale.KOREAN)
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
@@ -59,6 +61,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val plantDao = AppDatabase.getDatabase(application).plantDao()
         plantRepository = PlantRepository(plantDao)
         allPlants = plantRepository.getAllPlants()
+        prefs = PreferenceManager(application)
     }
 
     fun startLoading() {
@@ -79,12 +82,40 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     throw SecurityException("위치 권한이 없습니다.")
+                    stopLoading()
                 }
-                val location = getFreshLocation()
+
+                var locationToFetch: Location?
+                try {
+                    // 1. 새로운 위치 가져오기 시도
+                    val freshLocation = getFreshLocation()
+                    // 성공 시: 위치 저장 및 해당 위치로 날씨 가져오기
+                    prefs.lastKnownLat = freshLocation.latitude.toFloat()
+                    prefs.lastKnownLon = freshLocation.longitude.toFloat()
+                    locationToFetch = freshLocation
+                } catch (locationError: Exception) {
+                    // 2. 실패 시: 캐시된 위치 불러오기
+                    val cachedLat = prefs.lastKnownLat
+                    val cachedLon = prefs.lastKnownLon
+
+                    if (cachedLat != 0f && cachedLon != 0f) {
+                        // 캐시된 위치가 있으면
+                        locationToFetch = Location("cached").apply {
+                            latitude = cachedLat.toDouble()
+                            longitude = cachedLon.toDouble()
+                        }
+                    } else {
+                        // 3. 캐시된 위치도 없으면, 원래 발생한 오류를 다시 던짐
+                        throw locationError
+                    }
+                }
+
+                // 4. 위치가 있으면 (새롭거나 캐시된 위치) 날씨 가져오기
                 val apiKey = getApplication<Application>().getString(R.string.openweathermap_api_key)
-                fetchWeatherForLocation(location, apiKey)
+                fetchWeatherForLocation(locationToFetch!!, apiKey)
 
             } catch (e: Exception) {
+                // 5. 위치 가져오기(캐시 포함) 또는 날씨 가져오기 실패 시 오류 처리
                 handleFetchError(e)
             } finally {
                 stopLoading()
@@ -94,6 +125,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun getFreshLocation(): Location {
         try {
+            // 1. 마지막으로 알려진 위치 (빠름)
             val lastLocation = fusedLocationClient.lastLocation.await()
             if (lastLocation != null && (System.currentTimeMillis() - lastLocation.time) < 600000) {
                 return lastLocation
@@ -102,8 +134,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             Log.w("HomeViewModel", "마지막 위치 가져오기 실패", e)
         }
 
+        // 2. 현재 위치 (균형잡힌 전력/정확도 - 네트워크/Wi-Fi 우선)
         return fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_HIGH_ACCURACY,
+            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
             cancellationTokenSource.token
         ).await()
     }
@@ -153,9 +186,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         Log.e("HomeViewModel", "데이터 가져오기 오류", e)
         val errorMessage = when (e) {
             is SecurityException -> "날씨 정보를 보려면 위치 권한을 허용해주세요."
-            is IOException -> e.message
+            is IOException -> "날씨 정보를 가져올 수 없습니다. 인터넷 연결을 확인해주세요."
             is com.google.android.gms.tasks.RuntimeExecutionException -> "위치를 가져올 수 없습니다. GPS를 켜고 잠시 후 다시 시도해주세요."
-            else -> "날씨 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요."
+            else -> return // NPE 등 기타 오류는 무시
         }
         _error.postValue(errorMessage)
     }

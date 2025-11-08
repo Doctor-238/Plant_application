@@ -28,6 +28,10 @@ class PlantRepository(private val plantDao: PlantDao) {
         return plantDao.getPlantById(id)
     }
 
+    suspend fun getPlantByIdSnapshot(id: Int): PlantItem? {
+        return plantDao.getPlantByIdSnapshot(id)
+    }
+
     suspend fun updatePlant(plant: PlantItem) {
         plantDao.update(plant)
     }

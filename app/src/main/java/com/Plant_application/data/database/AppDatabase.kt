@@ -8,10 +8,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-@Database(entities = [PlantItem::class], version = 2, exportSchema = false)
+@Database(entities = [PlantItem::class, CalendarTask::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun plantDao(): PlantDao
+    abstract fun calendarTaskDao(): CalendarTaskDao
 
     suspend fun clearAllData() {
         withContext(Dispatchers.IO) {
@@ -23,7 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
                     e.printStackTrace()
                 }
             }
-            plantDao().clearAll()
+            clearAllTables()
         }
     }
 

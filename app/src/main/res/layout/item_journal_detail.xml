@@ -52,76 +52,54 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:id="@+id/tv_official_name"
-                style="@style/InfoTextViewStyle"
-                android:textSize="18sp"
-                tools:text="공식 이름: Monstera deliciosa" />
-            <View style="@style/DividerStyle" />
-            <TextView
-                android:id="@+id/tv_health"
-                style="@style/InfoTextViewStyle"
-                tools:text="건강 상태: ★★★★★" />
-            <View style="@style/DividerStyle" />
 
+            <!-- ✍️ 식물 일지 작성 섹션 -->
             <TextView
-                android:id="@+id/tv_watering"
-                style="@style/InfoTextViewStyle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingBottom="4dp"
-                tools:text="물 주기: 4-7일" />
-            <ProgressBar
-                android:id="@+id/pb_water"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginBottom="12dp"
-                android:progressDrawable="@drawable/bg_progress_gauge_water"
-                tools:progress="80"
-                tools:secondaryProgress="40"/>
-            <View style="@style/DividerStyle" />
+                android:text="식물 일지"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp" />
 
-            <TextView
-                android:id="@+id/tv_pesticide"
-                style="@style/InfoTextViewStyle"
+            <!-- 입력 영역 -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingBottom="4dp"
-                tools:text="살충제: 30-60일" />
-            <ProgressBar
-                android:id="@+id/pb_pesticide"
-                style="?android:attr/progressBarStyleHorizontal"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <EditText
+                    android:id="@+id/et_diary_input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="오늘의 식물 일지를 기록하세요"
+                    android:background="#D1C6A3"
+                    android:textColor="#333333"
+                    android:padding="12dp"
+                    android:inputType="textMultiLine"
+                    android:maxLines="4" />
+
+                <ImageButton
+                    android:id="@+id/btn_add_diary"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/plus2"
+                    android:contentDescription="일지 추가" />
+            </LinearLayout>
+
+            <!-- 일지 리스트 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_diary_list"
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginBottom="12dp"
-                android:progressDrawable="@drawable/bg_progress_gauge_pesticide"
-                tools:progress="100"
-                tools:secondaryProgress="50"/>
-            <View style="@style/DividerStyle" />
-
-            <TextView
-                android:id="@+id/tv_temp"
-                style="@style/InfoTextViewStyle"
-                tools:text="적정 온도: 18°C ~ 25°C" />
-            <View style="@style/DividerStyle" />
-
-            <TextView
-                android:id="@+id/tv_lifespan"
-                style="@style/InfoTextViewStyle"
                 android:layout_height="wrap_content"
-                android:paddingBottom="4dp"
-                tools:text="예상 수명: 5-10년" />
-            <ProgressBar
-                android:id="@+id/pb_lifespan"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginBottom="12dp"
-                android:progressDrawable="@drawable/bg_progress_gauge_lifespan"
-                tools:progress="90"
-                tools:secondaryProgress="50"/>
+                android:clipToPadding="false"
+                android:paddingBottom="8dp"
+                tools:listitem="@layout/item_diary_entry" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

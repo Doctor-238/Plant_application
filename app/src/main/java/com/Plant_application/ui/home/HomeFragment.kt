@@ -167,8 +167,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun checkAndRefresh() {
         if (!isAdded) return
 
-        homeViewModel.startLoading()
-
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestLocationPermission()
             return
@@ -242,6 +240,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             .setMessage("날씨 정보를 가져오려면 위치 서비스가 필요합니다. 설정에서 위치를 켜주세요.")
             .setPositiveButton("설정으로 이동") { _, _ ->
                 startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                homeViewModel.stopLoading()
             }
             .setNegativeButton("취소") { _, _ ->
                 homeViewModel.stopLoading()

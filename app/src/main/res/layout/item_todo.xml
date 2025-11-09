@@ -25,4 +25,13 @@
         android:textColor="@color/text_primary"
         tools:text="몬스테라 물 주기"/>
 
+    <ImageView
+        android:id="@+id/iv_delete_checkbox"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        android:visibility="gone"
+        tools:src="@drawable/ic_checkbox_unchecked_custom"
+        tools:visibility="visible" />
+
 </LinearLayout>

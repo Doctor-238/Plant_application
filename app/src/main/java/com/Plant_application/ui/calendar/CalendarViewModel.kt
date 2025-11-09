@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.floor
 
 class CalendarViewModel(application: Application) : AndroidViewModel(application) {
@@ -39,8 +40,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     private val plantsObserver = Observer<List<PlantItem>> { triggerSync() }
     private val tasksObserver = Observer<List<CalendarTask>> { triggerSync() }
 
-    @Volatile
-    private var syncing = false
+    private val syncing = AtomicBoolean(false)
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -80,8 +80,9 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun triggerSync() {
-        if (syncing) return
-        syncing = true
+        if (!syncing.compareAndSet(false, true)) {
+            return
+        }
         syncTasks()
     }
 
@@ -95,7 +96,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     handlePesticideTask(plant, today)
                 }
             } finally {
-                syncing = false
+                syncing.set(false)
             }
         }
     }

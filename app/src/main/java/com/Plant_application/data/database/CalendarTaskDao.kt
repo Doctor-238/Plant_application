@@ -24,7 +24,7 @@ interface CalendarTaskDao {
     @Query("SELECT * FROM calendar_tasks WHERE dueDate = :date AND isCompleted = 0")
     fun getActiveTasksForDate(date: Long): LiveData<List<CalendarTask>>
 
-    @Query("SELECT * FROM calendar_tasks WHERE dueDate = :date")
+    @Query("SELECT * FROM calendar_tasks WHERE dueDate = :date ORDER BY isCompleted ASC, CASE taskType WHEN 'WATERING' THEN 1 WHEN 'PESTICIDE' THEN 2 WHEN 'CUSTOM' THEN 3 ELSE 4 END ASC")
     fun getTasksForDateAll(date: Long): LiveData<List<CalendarTask>>
 
     @Query("UPDATE calendar_tasks SET isCompleted = 1 WHERE plantId = :plantId AND taskType = :taskType AND isCompleted = 0 AND dueDate < :today")

@@ -76,12 +76,18 @@ class JournalAdapter(
         }
 
         fun updateDeleteModeUI(isDelete: Boolean) {
-            if (isDelete && binding.ivDeleteCheckbox.visibility == View.GONE) {
-                binding.ivDeleteCheckbox.visibility = View.VISIBLE
-                binding.ivDeleteCheckbox.startAnimation(AnimationUtils.loadAnimation(itemView.context, R.anim.scale_in))
-            } else if (!isDelete && binding.ivDeleteCheckbox.visibility == View.VISIBLE) {
-                binding.ivDeleteCheckbox.startAnimation(AnimationUtils.loadAnimation(itemView.context, R.anim.scale_out))
-                binding.ivDeleteCheckbox.visibility = View.GONE
+            if (isDelete) {
+                if (binding.ivDeleteCheckbox.visibility != View.VISIBLE) {
+                    binding.ivDeleteCheckbox.visibility = View.VISIBLE
+                    binding.ivDeleteCheckbox.startAnimation(AnimationUtils.loadAnimation(itemView.context, R.anim.scale_in))
+                }
+            } else {
+                if (binding.ivDeleteCheckbox.visibility == View.VISIBLE) {
+                    binding.ivDeleteCheckbox.startAnimation(AnimationUtils.loadAnimation(itemView.context, R.anim.scale_out))
+                    binding.ivDeleteCheckbox.visibility = View.INVISIBLE
+                } else if (binding.ivDeleteCheckbox.visibility == View.GONE) {
+                    binding.ivDeleteCheckbox.visibility = View.INVISIBLE
+                }
             }
         }
 

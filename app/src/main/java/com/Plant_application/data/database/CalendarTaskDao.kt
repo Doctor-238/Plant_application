@@ -2,7 +2,6 @@ package com.Plant_application.data.database
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -10,34 +9,36 @@ import androidx.room.Update
 
 @Dao
 interface CalendarTaskDao {
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(task: CalendarTask): Long
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(task: CalendarTask)
 
     @Update
-    suspend fun update(task: CalendarTask)
+    fun update(task: CalendarTask)
 
-    @Delete
-    suspend fun delete(task: CalendarTask)
+    @Query("DELETE FROM calendar_tasks WHERE id = :id")
+    fun deleteById(id: Long)
 
-    @Query("SELECT * FROM calendar_tasks WHERE dueDate = :date AND isSkipped = 0 ORDER BY isCompleted ASC, id ASC")
-    fun getTasksForDate(date: Long): LiveData<List<CalendarTask>>
-
-    @Query("SELECT * FROM calendar_tasks WHERE isCompleted = 0 AND isSkipped = 0")
+    @Query("SELECT * FROM calendar_tasks WHERE isCompleted = 0")
     fun getIncompleteTasks(): LiveData<List<CalendarTask>>
 
-    @Query("SELECT * FROM calendar_tasks")
-    suspend fun getAllTasksList(): List<CalendarTask>
+    @Query("SELECT * FROM calendar_tasks WHERE dueDate = :date AND isCompleted = 0")
+    fun getActiveTasksForDate(date: Long): LiveData<List<CalendarTask>>
 
-    @Query("SELECT * FROM calendar_tasks WHERE plantId = :plantId AND taskType = :taskType AND dueDate = :dueDate AND isSkipped = 0")
-    suspend fun findTask(plantId: Int, taskType: TaskType, dueDate: Long): CalendarTask?
+    @Query("SELECT * FROM calendar_tasks WHERE dueDate = :date ORDER BY isCompleted ASC, CASE taskType WHEN 'WATERING' THEN 1 WHEN 'PESTICIDE' THEN 2 WHEN 'CUSTOM' THEN 3 ELSE 4 END ASC")
+    fun getTasksForDateAll(date: Long): LiveData<List<CalendarTask>>
 
-    @Query("UPDATE calendar_tasks SET isCompleted = 1 WHERE plantId = :plantId AND taskType = :taskType AND dueDate < :today AND isCompleted = 0")
-    suspend fun completePastTasks(plantId: Int, taskType: TaskType, today: Long)
+    @Query("UPDATE calendar_tasks SET isCompleted = 1 WHERE plantId = :plantId AND taskType = :taskType AND isCompleted = 0 AND dueDate < :today")
+    fun completePastTasks(plantId: Int, taskType: TaskType, today: Long)
 
-    @Query("DELETE FROM calendar_tasks WHERE id in (:ids)")
-    suspend fun deleteTasksByIds(ids: List<Long>)
+    @Query("DELETE FROM calendar_tasks WHERE plantId = :plantId AND taskType = :taskType AND isCompleted = 0 AND dueDate != :dueDate")
+    fun purgeConflictingTasks(plantId: Int, taskType: TaskType, dueDate: Long)
 
-    @Query("UPDATE calendar_tasks SET isSkipped = 1 WHERE id in (:ids)")
-    suspend fun skipTasksByIds(ids: List<Long>)
+    @Query("SELECT * FROM calendar_tasks WHERE plantId = :plantId AND taskType = :taskType AND isCompleted = 0 LIMIT 1")
+    fun getActiveTask(plantId: Int, taskType: TaskType): CalendarTask?
+
+    @Query("SELECT EXISTS(SELECT 1 FROM calendar_tasks WHERE plantId = :plantId AND taskType = :taskType AND isCompleted = 0)")
+    fun existActiveTask(plantId: Int, taskType: TaskType): Boolean
+
+    @Query("SELECT * FROM plants")
+    fun getAllPlantsSnapshot(): List<PlantItem>
 }

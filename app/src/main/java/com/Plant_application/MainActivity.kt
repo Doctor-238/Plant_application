@@ -64,7 +64,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setupNavigation()
     }
 
@@ -72,7 +71,6 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
         navController = navHostFragment.navController
         val navGraph = navController.navInflater.inflate(R.navigation.mobile_navigation)
-
         val prefs = PreferenceManager(this)
         if (prefs.isFirstLaunch) {
             navGraph.setStartDestination(R.id.onboardingFragment)
@@ -81,16 +79,14 @@ class MainActivity : AppCompatActivity() {
             navGraph.setStartDestination(R.id.navigation_home)
         }
         navController.graph = navGraph
-
         setupBottomNav()
     }
 
     private fun setupBottomNav() {
         binding.navView.setupWithNavController(navController)
-
         binding.navView.setOnItemSelectedListener { item ->
             if (item.itemId == R.id.navigation_add_plant) {
-                showImagePickerDialog()
+                openAddPlantImagePicker()
                 return@setOnItemSelectedListener false
             }
             if (navController.currentDestination?.id != item.itemId) {
@@ -98,7 +94,6 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
-
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.onboardingFragment, R.id.addPlantFragment, R.id.plantDetailFragment, R.id.editPlantFragment -> {
@@ -111,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showImagePickerDialog() {
+    fun openAddPlantImagePicker() {
         AlertDialog.Builder(this)
             .setTitle("식물 사진 추가")
             .setItems(arrayOf("카메라로 촬영", "갤러리에서 선택")) { _, which ->
@@ -125,10 +120,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkCameraPermissionAndOpen() {
         when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
                 openCamera()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {

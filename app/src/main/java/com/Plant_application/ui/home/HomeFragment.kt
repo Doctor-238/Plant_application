@@ -18,10 +18,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.Plant_application.R
+import com.Plant_application.data.database.PlantItem
 import com.Plant_application.databinding.FragmentHomeBinding
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
@@ -60,10 +62,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         binding.ivSettings.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_navigation_settings)
         }
-
-        binding.ivAddPlantHome.setOnClickListener {
-            findNavController().navigate(R.id.action_global_addPlantFragment)
-        }
     }
 
     override fun onResume() {
@@ -78,15 +76,52 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 findNavController().navigate(action)
             },
             onWaterClicked = { plant ->
-                homeViewModel.updateLastWatered(plant)
-                showToast("${plant.nickname} 물 주기 완료!")
+                handleCareAction(plant, true)
             },
             onPesticideClicked = { plant ->
-                homeViewModel.updateLastPesticide(plant)
-                showToast("${plant.nickname} 살충 완료!")
+                handleCareAction(plant, false)
             }
         )
         binding.rvPlants.adapter = plantAdapter
+    }
+
+    private fun handleCareAction(plant: PlantItem, isWater: Boolean) {
+        val now = System.currentTimeMillis()
+        val last = if (isWater) plant.lastWateredTimestamp else plant.lastPesticideTimestamp
+        val minDays = if (isWater) plant.wateringCycleMin else plant.pesticideCycleMin
+
+        var showEarlyDialog = false
+        if (minDays > 0) {
+            val minRecommendedTimestamp = last + TimeUnit.DAYS.toMillis(minDays.toLong())
+            val earlyWateringTimestamp = minRecommendedTimestamp - TimeUnit.HOURS.toMillis(12)
+
+            if (now < earlyWateringTimestamp) {
+                showEarlyDialog = true
+            }
+        }
+
+        if (showEarlyDialog) {
+            AlertDialog.Builder(requireContext())
+                .setTitle("조금 이른 시기입니다")
+                .setMessage("최소 권장 주기: ${minDays}일\n아직 ${minDays}일이 되기 12시간 전입니다. 그래도 진행하시겠습니까?")
+                .setPositiveButton("예") { _, _ ->
+                    applyCare(plant, isWater)
+                }
+                .setNegativeButton("아니오", null)
+                .show()
+        } else {
+            applyCare(plant, isWater)
+        }
+    }
+
+    private fun applyCare(plant: PlantItem, isWater: Boolean) {
+        if (isWater) {
+            homeViewModel.updateLastWatered(plant)
+            showToast("${plant.nickname} 물 주기 완료!")
+        } else {
+            homeViewModel.updateLastPesticide(plant)
+            showToast("${plant.nickname} 살충 완료!")
+        }
     }
 
     private fun setupSwipeRefreshLayout() {

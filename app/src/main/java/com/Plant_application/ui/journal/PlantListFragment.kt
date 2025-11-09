@@ -45,9 +45,12 @@ class PlantListFragment : Fragment(R.layout.fragment_plant_list) {
     }
 
     private fun observeViewModel() {
-        viewModel.getPlantsForCurrentTab().observe(viewLifecycleOwner) { plants ->
-            adapter.submitList(plants)
-            binding.emptyViewContainer.isVisible = plants.isEmpty() && viewModel.searchQuery.value.isNullOrEmpty()
+        viewModel.currentTabState.observe(viewLifecycleOwner) { state ->
+            adapter.submitList(state.items)
+            binding.emptyViewContainer.isVisible = state.items.isEmpty() && viewModel.searchQuery.value.isNullOrEmpty()
+
+            adapter.notifyItemRangeChanged(0, adapter.itemCount, "DELETE_MODE_CHANGED")
+            adapter.notifyItemRangeChanged(0, adapter.itemCount, "SELECTION_CHANGED")
         }
     }
 

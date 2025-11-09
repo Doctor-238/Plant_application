@@ -49,7 +49,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         allPlantsLive = plantRepository.getAllPlants()
         allIncompleteTasks = taskDao.getIncompleteTasks()
 
-        selectedDateTodos = _selectedDate.switchMap { date -> taskDao.getActiveTasksForDate(date) }
+        selectedDateTodos = _selectedDate.switchMap { date -> taskDao.getTasksForDateAll(date) }
 
         allPlantsLive.observeForever(plantsObserver)
         allIncompleteTasks.observeForever(tasksObserver)
@@ -187,7 +187,16 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun onTaskChecked(task: CalendarTask, isChecked: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val plantId = task.plantId ?: return@launch
+            val plantId = task.plantId
+
+            if (plantId == null) {
+                if (task.taskType == TaskType.CUSTOM) {
+                    val updatedTask = task.copy(isCompleted = isChecked)
+                    taskDao.update(updatedTask)
+                }
+                return@launch
+            }
+
             val plant = plantRepository.getPlantByIdSnapshot(plantId) ?: return@launch
             val updatedTask = task.copy()
             val updatedPlant: PlantItem = if (isChecked) {

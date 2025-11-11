@@ -101,13 +101,19 @@ class MainActivity : AppCompatActivity() {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.onboardingFragment, R.id.addPlantFragment, R.id.plantDetailFragment, R.id.editPlantFragment -> {
+                R.id.onboardingFragment, R.id.navigation_add_plant, R.id.plantDetailFragment, R.id.editPlantFragment -> {
                     binding.navView.visibility = View.GONE
+                    binding.cameraCircleContainer.visibility = View.GONE
                 }
                 else -> {
                     binding.navView.visibility = View.VISIBLE
+                    binding.cameraCircleContainer.visibility = View.VISIBLE
                 }
             }
+        }
+
+        binding.cameraCircleContainer.setOnClickListener {
+            showImagePickerDialog()
         }
     }
 

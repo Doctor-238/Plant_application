@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item
         android:id="@+id/navigation_home"
         android:icon="@drawable/home"
@@ -13,7 +11,8 @@
 
     <item
         android:id="@+id/navigation_add_plant"
-        android:icon="@drawable/camera"
+
+        android:icon="@android:color/transparent"
         android:title="" />
 
     <item
@@ -25,5 +24,4 @@
         android:id="@+id/navigation_search"
         android:icon="@drawable/search"
         android:title="" />
-
 </menu>

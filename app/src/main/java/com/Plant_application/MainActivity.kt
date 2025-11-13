@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.cameraCircleContainer.setOnClickListener {
-            showImagePickerDialog()
+            openAddPlantImagePicker()
         }
     }
 

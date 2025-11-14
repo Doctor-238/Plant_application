@@ -80,7 +80,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         fetchJob = viewModelScope.launch {
             startLoading()
             try {
-                if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     throw SecurityException("위치 권한이 없습니다.")
                     stopLoading()
                 }
@@ -134,9 +135,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             Log.w("HomeViewModel", "마지막 위치 가져오기 실패", e)
         }
 
-        // 2. 현재 위치 (균형잡힌 전력/정확도 - 네트워크/Wi-Fi 우선)
+        // 2. 현재 위치 (높은 정확도 - GPS 우선)
         return fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+            Priority.PRIORITY_HIGH_ACCURACY,
             cancellationTokenSource.token
         ).await()
     }

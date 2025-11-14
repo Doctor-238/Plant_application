@@ -56,7 +56,8 @@ class PlantAdapter(
 
                 val waterWarningMillis = TimeUnit.DAYS.toMillis(plantItem.wateringCycleMin.toLong())
                 val currentWaterPercent = (100 - (timeSinceWater * 100 / totalWaterMillis)).coerceIn(0, 100)
-                val waterWarningPercent = (100 - (waterWarningMillis * 100 / totalWaterMillis)).coerceIn(0, 100)
+                val waterWarningPercent = (100 - (
+                        waterWarningMillis * 100 / totalWaterMillis)).coerceIn(0, 100)
 
                 binding.pbWaterGauge.secondaryProgress = currentWaterPercent.toInt()
                 binding.pbWaterGauge.progress = waterWarningPercent.toInt()

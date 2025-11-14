@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp">
 
-    <!-- 식물 카드 -->
+    <!-- 카드 본체 -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_plant"
         android:layout_width="0dp"
@@ -17,143 +17,136 @@
         app:cardBackgroundColor="@color/card_background_light_green"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="5dp"
-            android:paddingTop="8dp"
-            android:paddingRight="5dp"
-            android:paddingBottom="5dp">
+            android:paddingBottom="8dp">
 
-            <!-- 왼쪽/오른쪽 영역을 나누는 가이드라인 (왼쪽 40%) -->
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/gl_left"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.35" />
-
-            <!-- 이름 : 이미지 위쪽에 배치 -->
+            <!-- 왼쪽 열: 제목(가운데), 이미지, 예상 수명 -->
             <TextView
-                android:id="@+id/tv_plant_nickname"
+                android:id="@+id/tvPlantNickname"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="12dp"
+                android:layout_marginTop="12dp"
                 android:textColor="@color/text_primary"
-                android:textSize="12sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@id/gl_left"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/ivPlantImage"
+                app:layout_constraintEnd_toEndOf="@+id/ivPlantImage"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="우리집 몬스테라" />
-
-            <!-- 이미지 : 이름 아래에 작게 -->
-
-            <!-- 예상 수명 : 이미지 바로 아래에 -->
+                tools:text="우리집 몬스테라"/>
 
             <ImageView
-                android:id="@+id/iv_plant_image"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_marginStart="32dp"
-                android:layout_marginTop="4dp"
+                android:id="@+id/ivPlantImage"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp"
                 android:scaleType="centerCrop"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_plant_nickname"
-                tools:src="@drawable/plant2" />
+                app:layout_constraintTop_toBottomOf="@id/tvPlantNickname"
+                app:layout_constraintBottom_toTopOf="@id/tv_lifespan"
+                tools:src="@drawable/plant2"/>
 
-            <LinearLayout
-                android:id="@+id/ll_lifespan"
+            <TextView
+                android:id="@+id/tv_lifespan"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/iv_plant_image"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/gl_left"
-                app:layout_constraintHorizontal_bias="0.5">
-
-                <TextView
-                    android:id="@+id/tv_lifespan_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="예상 수명:"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"/>
-
-                <TextView
-                    android:id="@+id/tv_lifespan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    tools:text="10년"/>
-            </LinearLayout>
-
-            <!-- 물 게이지 : 왼쪽은 가이드라인에 맞추고 오른쪽은 여백 주기 -->
-            <TextView
-                android:id="@+id/tv_water_gauge_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="물 게이지"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="@id/gl_left"
-                app:layout_constraintTop_toTopOf="@id/iv_plant_image" />
+                app:layout_constraintStart_toStartOf="@id/ivPlantImage"
+                app:layout_constraintTop_toBottomOf="@id/ivPlantImage"
+                tools:text="예상 수명: 10년"/>
 
-            <ProgressBar
-                android:id="@+id/pb_water_gauge"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="198dp"
-                android:layout_height="9dp"
-                android:layout_marginTop="4dp"
-                android:layout_marginEnd="16dp"
-                android:progressDrawable="@drawable/bg_progress_bar_water"
+            <!-- 오른쪽 열: 물/살충제 정보 + 게이지 + 체크버튼 -->
+            <TextView
+                android:id="@+id/tvWaterInfo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="44dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                app:layout_constraintStart_toEndOf="@id/ivPlantImage"
+                app:layout_constraintTop_toTopOf="@id/ivPlantImage"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="@id/gl_left"
-                app:layout_constraintTop_toBottomOf="@id/tv_water_gauge_label"
-                tools:progress="50" />
-
-            <!-- 면역 게이지 -->
-
-            <TextView
-                android:id="@+id/tv_pesticide_gauge_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="8dp"
-                android:text="면역 게이지(살충제)"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="@id/gl_left"
-                app:layout_constraintTop_toBottomOf="@id/pb_water_gauge" />
+                tools:text="물: 2일 6시간 전"/>
 
             <ProgressBar
-                android:id="@+id/pb_pesticide_gauge"
+                android:id="@+id/pbWaterGauge"
                 style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="207dp"
+                android:layout_width="0dp"
                 android:layout_height="8dp"
                 android:layout_marginTop="4dp"
-                android:layout_marginEnd="16dp"
-                android:progressDrawable="@drawable/bg_progress_bar_pesticide"
+                android:layout_marginEnd="44dp"
+                android:progressDrawable="@drawable/bg_progress_bar_water"
+                app:layout_constraintStart_toStartOf="@id/tvWaterInfo"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="@+id/tv_pesticide_gauge_label"
-                app:layout_constraintTop_toBottomOf="@id/tv_pesticide_gauge_label"
-                tools:progress="70" />
+                app:layout_constraintTop_toBottomOf="@id/tvWaterInfo"
+                tools:progress="50"/>
+
+            <ImageButton
+                android:id="@+id/btnWaterCheck"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_check"
+                app:tint="@color/nav_icon"
+                app:layout_constraintTop_toTopOf="@id/tvWaterInfo"
+                app:layout_constraintBottom_toBottomOf="@id/pbWaterGauge"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <TextView
+                android:id="@+id/tvPesticideInfo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="44dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                app:layout_constraintStart_toStartOf="@id/tvWaterInfo"
+                app:layout_constraintTop_toBottomOf="@id/pbWaterGauge"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="살충제: 5일 전"/>
+
+            <ProgressBar
+                android:id="@+id/pbPesticideGauge"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="44dp"
+                android:progressDrawable="@drawable/bg_progress_bar_pesticide"
+                app:layout_constraintStart_toStartOf="@id/tvPesticideInfo"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvPesticideInfo"
+                tools:progress="70"/>
+
+            <ImageButton
+                android:id="@+id/btnPesticideCheck"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_check"
+                app:tint="@color/nav_icon"
+                app:layout_constraintTop_toTopOf="@id/tvPesticideInfo"
+                app:layout_constraintBottom_toBottomOf="@id/pbPesticideGauge"
+                app:layout_constraintEnd_toEndOf="parent"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
-
-    <!-- 카드 아래 '소소한 팁' 바 (카드 바깥, 살짝 겹치게) -->
+    <!-- 카드 아래에 붙는 소소한 팁 바 (카드 바깥) -->
     <LinearLayout
         android:id="@+id/layout_tip"
         android:layout_width="0dp"
@@ -177,14 +170,14 @@
             android:layout_weight="1"
             android:text="소소한 팁? 작은 물 온개 체크 용도 박스로도 사용가능"
             android:textColor="@android:color/black"
-            android:textSize="12sp" />
+            android:textSize="12sp"/>
 
         <CheckBox
             android:id="@+id/cb_check"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginStart="8dp"
-            android:buttonTint="@android:color/darker_gray" />
+            android:buttonTint="@android:color/darker_gray"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

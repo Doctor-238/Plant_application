@@ -14,7 +14,6 @@
         android:layout_height="70dp"
         android:background="@drawable/bg_bottom_nav_bar"
         android:elevation="8dp"
-        android:layout_gravity="bottom"
         app:menu="@menu/bottom_nav_menu"
         app:itemIconSize="28dp"
         app:itemIconTint="@color/nav_icon"
@@ -23,7 +22,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-
 
     <!-- 🔹 중앙 카메라 원 -->
     <FrameLayout

@@ -11,8 +11,8 @@
 
     <!-- 가운데 빈 공간 (카메라 자리 확보용) -->
     <item
-        android:id="@+id/navigation_placeholder"
-        android:enabled="false"
+        android:id="@+id/navigation_add_plant"
+
         android:icon="@android:color/transparent"
         android:title="" />
 

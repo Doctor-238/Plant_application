@@ -61,7 +61,7 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }.build()
 
         GenerativeModel(
-            modelName = "gemini-2.5-flash-image",
+            modelName = "gemini-2.5-flash-lite",
             apiKey = getApplication<Application>().getString(R.string.gemini_api_key),
             generationConfig = config
         )
@@ -167,15 +167,32 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
     private suspend fun fetchImageFromWikimedia(plantName: String): String? {
         return withContext(Dispatchers.IO) {
             try {
-                val response = wikimediaApiService.getPageImage(titles = plantName)
-                if (response.isSuccessful) {
-                    val pages = response.body()?.query?.pages
-                    val firstPage = pages?.values?.firstOrNull()
-                    firstPage?.thumbnail?.source
-                } else {
-                    Log.w("AddPlantViewModel", "Wikimedia API call failed: ${response.errorBody()?.string()}")
-                    null
+                // 1. First attempt using getPageSummary (handles redirects well)
+                val summaryResponse = wikimediaApiService.getPageSummary(title = plantName)
+                if (summaryResponse.isSuccessful) {
+                    val imageUrl = summaryResponse.body()?.thumbnail?.source
+                    if (imageUrl != null) return@withContext imageUrl
                 }
+
+                // 2. Fallback: If summary failed, use the search API
+                Log.w("AddPlantViewModel", "getPageSummary failed. Falling back to search API.")
+                val searchResponse = wikimediaApiService.searchPages(srsearch = plantName)
+                if (searchResponse.isSuccessful) {
+                    val firstTitle = searchResponse.body()?.query?.search?.firstOrNull()?.title
+
+                    if (firstTitle != null) {
+                        // 3. Retry getPageSummary with the title from the search result
+                        val retryResponse = wikimediaApiService.getPageSummary(title = firstTitle)
+                        if (retryResponse.isSuccessful) {
+                            return@withContext retryResponse.body()?.thumbnail?.source
+                        }
+                    }
+                }
+
+                // 4. If all else fails, return null
+                Log.w("AddPlantViewModel", "All Wikimedia image fetch attempts failed.")
+                null
+
             } catch (e: Exception) {
                 Log.e("AddPlantViewModel", "fetchImageFromWikimedia failed", e)
                 null

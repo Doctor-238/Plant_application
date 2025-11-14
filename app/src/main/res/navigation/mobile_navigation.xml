@@ -12,7 +12,7 @@
         tools:layout="@layout/fragment_onboarding">
         <action
             android:id="@+id/action_onboardingFragment_to_addPlantFragment"
-            app:destination="@id/addPlantFragment"
+            app:destination="@id/navigation_add_plant"
             app:popUpTo="@id/mobile_navigation"
             app:popUpToInclusive="true" />
     </fragment>
@@ -59,24 +59,26 @@
         tools:layout="@layout/fragment_my_page" />
 
     <fragment
-        android:id="@+id/addPlantFragment"
+        android:id="@+id/navigation_add_plant"
         android:name="com.Plant_application.ui.add.AddPlantFragment"
         android:label="fragment_add_plant"
         tools:layout="@layout/fragment_add_plant">
         <argument
-            android:name="plantAnalysis"
+         android:name="plantAnalysis"
             app:argType="com.Plant_application.ui.add.PlantAnalysis"
             app:nullable="true"
             android:defaultValue="@null" />
         <argument
-            android:name="imageUri"
+             android:name="imageUri"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
     </fragment>
+
     <action
         android:id="@+id/action_global_addPlantFragment"
-        app:destination="@id/addPlantFragment" />
+        app:destination="@id/navigation_add_plant" />
+
 
     <fragment
         android:id="@+id/plantDetailFragment"

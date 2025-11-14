@@ -32,7 +32,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (!isGranted) {
-            if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 showGoToSettingsDialog()
             } else {
                 showToast("위치 권한이 거부되었습니다. 홈 화면에서 날씨 정보를 이용할 수 없습니다.")
@@ -98,21 +98,21 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         when {
             ContextCompat.checkSelfPermission(
                 requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
             }
-            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION) -> {
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
                 AlertDialog.Builder(requireContext())
                     .setTitle("위치 권한 안내")
                     .setMessage("앱의 핵심 기능인 날씨 정보 표시를 위해 위치 권한이 필요합니다.")
                     .setPositiveButton("권한 허용") { _, _ ->
-                        locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                        locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }
                     .setNegativeButton("거부", null)
                     .show()
             }
             else -> {
-                locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }

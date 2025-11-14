@@ -64,7 +64,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     }.build()
 
                     generativeModel = GenerativeModel(
-                        "gemini-2.5-flash",
+                        "gemini-2.5-flash-lite",
                         apiKey,
                         generationConfig = config
                     )

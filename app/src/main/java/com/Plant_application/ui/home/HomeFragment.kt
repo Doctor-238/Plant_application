@@ -43,7 +43,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             checkAndRefresh()
         } else {
             homeViewModel.stopLoading()
-            if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 showGoToSettingsDialog()
             } else {
                 showToast("위치 권한이 거부되어 날씨 정보를 가져올 수 없습니다.")
@@ -202,7 +202,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun checkAndRefresh() {
         if (!isAdded) return
 
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestLocationPermission()
             return
         }
@@ -225,13 +226,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun requestLocationPermission() {
-        if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+        if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
             AlertDialog.Builder(requireContext())
                 .setTitle("위치 권한 안내")
                 .setMessage("현재 위치의 날씨 정보를 가져오기 위해 위치 권한이 필요합니다.")
                 .setPositiveButton("권한 허용") { _, _ ->
                     homeViewModel.permissionRequestedThisSession = true
-                    locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 }
                 .setNegativeButton("거부") { _, _ ->
                     homeViewModel.stopLoading()
@@ -244,7 +245,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 .show()
         } else {
             homeViewModel.permissionRequestedThisSession = true
-            locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 

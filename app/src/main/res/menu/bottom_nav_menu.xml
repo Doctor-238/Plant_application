@@ -5,10 +5,11 @@
         android:title="" />
 
     <item
-        android:id="@+id/navigation_journal"
+        android:id="@+id/navigation_calendar"
         android:icon="@drawable/calendar"
         android:title="" />
 
+    <!-- 가운데 빈 공간 (카메라 자리 확보용) -->
     <item
         android:id="@+id/navigation_add_plant"
 
@@ -16,7 +17,7 @@
         android:title="" />
 
     <item
-        android:id="@+id/navigation_mypage"
+        android:id="@+id/navigation_alarm"
         android:icon="@drawable/alarm"
         android:title="" />
 

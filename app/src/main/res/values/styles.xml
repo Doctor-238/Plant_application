@@ -14,4 +14,8 @@
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">12sp</item>
     </style>
+
+    <style name="NavIndicatorStyle">
+        <item name="android:color">@color/nav_icon_selected</item>
+    </style>
 </resources>

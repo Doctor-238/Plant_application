@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.Plant_application.R
+import com.Plant_application.data.database.PlantItem
 import com.Plant_application.databinding.FragmentPlantDetailBinding
 import com.bumptech.glide.Glide
 import java.io.File
@@ -21,6 +22,8 @@ class PlantDetailFragment : Fragment(R.layout.fragment_plant_detail) {
 
     private val viewModel: PlantDetailViewModel by viewModels()
     private val args: PlantDetailFragmentArgs by navArgs()
+
+    private var currentPlant: PlantItem? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -35,6 +38,17 @@ class PlantDetailFragment : Fragment(R.layout.fragment_plant_detail) {
             val action = PlantDetailFragmentDirections.actionPlantDetailFragmentToEditPlantFragment(args.plantId)
             findNavController().navigate(action)
         }
+
+        binding.fabDiary.setOnClickListener {
+            currentPlant?.let { plant ->
+                val action = PlantDetailFragmentDirections.actionPlantDetailFragmentToDiaryListFragment(
+                    plant.id,
+                    plant.nickname,
+                    plant.imageUri
+                )
+                findNavController().navigate(action)
+            }
+        }
     }
 
     private fun setupToolbar() {
@@ -47,6 +61,8 @@ class PlantDetailFragment : Fragment(R.layout.fragment_plant_detail) {
         viewModel.plantItem.observe(viewLifecycleOwner) { plant ->
             if (plant == null) return@observe
 
+            currentPlant = plant
+
             binding.toolbarLayout.title = plant.nickname
             Glide.with(this).load(Uri.fromFile(File(plant.imageUri))).into(binding.ivPlantImage)
 
@@ -56,7 +72,6 @@ class PlantDetailFragment : Fragment(R.layout.fragment_plant_detail) {
 
             val currentTime = System.currentTimeMillis()
 
-            // Water Gauge
             binding.pbWater.visibility = View.VISIBLE
             val totalWaterMillis = TimeUnit.DAYS.toMillis(plant.wateringCycleMax.toLong())
             if (totalWaterMillis <= 0) {
@@ -76,7 +91,6 @@ class PlantDetailFragment : Fragment(R.layout.fragment_plant_detail) {
                 binding.pbWater.progress = waterWarningPercent.toInt()
             }
 
-            // Pesticide Gauge
             binding.pbPesticide.visibility = View.VISIBLE
             val totalPesticideMillis = TimeUnit.DAYS.toMillis(plant.pesticideCycleMax.toLong())
             if (totalPesticideMillis <= 0) {
@@ -96,7 +110,6 @@ class PlantDetailFragment : Fragment(R.layout.fragment_plant_detail) {
                 binding.pbPesticide.progress = pesticideWarningPercent.toInt()
             }
 
-            // Lifespan Gauge
             binding.tvLifespan.text = "예상 수명: ${formatRange(plant.lifespanMin, plant.lifespanMax, "년")}"
             val totalLifespanMillis = TimeUnit.DAYS.toMillis(plant.lifespanMax * 365L)
             if (totalLifespanMillis > 0) {

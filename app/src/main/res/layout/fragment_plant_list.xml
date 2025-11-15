@@ -33,7 +33,8 @@
                 android:layout_height="36dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/plus2"
-                android:scaleType="centerInside"/>
+                android:scaleType="centerInside"
+                android:visibility="gone"/>
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView

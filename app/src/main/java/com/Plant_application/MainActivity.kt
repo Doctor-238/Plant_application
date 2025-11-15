@@ -89,8 +89,15 @@ class MainActivity : AppCompatActivity() {
                 openAddPlantImagePicker()
                 return@setOnItemSelectedListener false
             }
-            if (navController.currentDestination?.id != item.itemId) {
-                navController.navigate(item.itemId)
+
+            val destinationId = when (item.itemId) {
+                R.id.navigation_calendar -> R.id.navigation_journal
+                R.id.navigation_alarm -> R.id.navigation_mypage
+                else -> item.itemId
+            }
+
+            if (navController.currentDestination?.id != destinationId) {
+                navController.navigate(destinationId)
             }
             true
         }

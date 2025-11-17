@@ -23,5 +23,8 @@ data class PlantItem(
 
     val lastWateredTimestamp: Long = 0L,
     val lastPesticideTimestamp: Long = 0L,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+
+    var needsAttentionTimestamp: Long? = null,
+    var attentionReasons: String? = null
 )

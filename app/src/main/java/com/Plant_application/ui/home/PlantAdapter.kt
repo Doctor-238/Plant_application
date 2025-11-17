@@ -4,6 +4,7 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -39,6 +40,10 @@ class PlantAdapter(
         fun bind(plantItem: PlantItem) {
             binding.tvPlantNickname.text = plantItem.nickname
             binding.tvLifespan.text = formatRange(plantItem.lifespanMin, plantItem.lifespanMax, "년")
+
+            binding.tvReasonWater.isVisible = plantItem.attentionReasons?.contains("WATER") == true
+            binding.tvReasonPesticide.isVisible = plantItem.attentionReasons?.contains("PESTICIDE") == true
+            binding.tvReasonTemp.isVisible = plantItem.attentionReasons?.contains("TEMP") == true
 
             val currentTime = System.currentTimeMillis()
 

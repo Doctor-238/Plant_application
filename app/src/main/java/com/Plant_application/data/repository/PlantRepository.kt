@@ -44,4 +44,16 @@ class PlantRepository(private val plantDao: PlantDao) {
             // Log error
         }
     }
+
+    suspend fun getAllPlantsList(): List<PlantItem> {
+        return plantDao.getAllPlantsList()
+    }
+
+    fun getNeedsAttentionPlants(): LiveData<List<PlantItem>> {
+        return plantDao.getNeedsAttentionPlants()
+    }
+
+    suspend fun getNeedsAttentionPlantsSnapshot(): List<PlantItem> {
+        return plantDao.getNeedsAttentionPlantsSnapshot()
+    }
 }

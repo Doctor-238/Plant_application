@@ -49,6 +49,24 @@ class PreferenceManager(context: Context) {
             prefs.edit().putInt(KEY_SURVEY_HUMIDITY, value).apply()
         }
 
+    var notifWaterEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NOTIF_WATER, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_NOTIF_WATER, value).apply()
+        }
+
+    var notifPesticideEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NOTIF_PESTICIDE, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_NOTIF_PESTICIDE, value).apply()
+        }
+
+    var notifTempEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NOTIF_TEMP, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_NOTIF_TEMP, value).apply()
+        }
+
     companion object {
         private const val PREFS_NAME = "planty_prefs"
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
@@ -58,5 +76,9 @@ class PreferenceManager(context: Context) {
         private const val KEY_SURVEY_SUNLIGHT = "survey_sunlight"
         private const val KEY_SURVEY_TEMP = "survey_temp"
         private const val KEY_SURVEY_HUMIDITY = "survey_humidity"
+
+        private const val KEY_NOTIF_WATER = "notif_water_enabled"
+        private const val KEY_NOTIF_PESTICIDE = "notif_pesticide_enabled"
+        private const val KEY_NOTIF_TEMP = "notif_temp_enabled"
     }
 }

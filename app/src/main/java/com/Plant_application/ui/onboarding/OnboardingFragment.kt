@@ -52,6 +52,12 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             val tempRating = getSelectedRating(binding.rgTemp)
             val humidityRating = getSelectedRating(binding.rgHumidity)
 
+            val prefs = PreferenceManager(requireContext())
+            prefs.surveySpace = spaceRating
+            prefs.surveySunlight = sunlightRating
+            prefs.surveyTemp = tempRating
+            prefs.surveyHumidity = humidityRating
+
             viewModel.getPlantRecommendation(
                 getString(R.string.gemini_api_key),
                 spaceRating,

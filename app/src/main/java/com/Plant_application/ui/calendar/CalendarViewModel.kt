@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.CalendarTask
 import com.Plant_application.data.database.CalendarTaskDao
+import com.Plant_application.data.database.DiaryEntryDao
 import com.Plant_application.data.database.PlantItem
 import com.Plant_application.data.database.TaskType
 import com.Plant_application.data.repository.PlantRepository
@@ -23,6 +24,7 @@ import kotlin.math.floor
 class CalendarViewModel(application: Application) : AndroidViewModel(application) {
     private val plantRepository: PlantRepository
     private val taskDao: CalendarTaskDao
+    private val diaryDao: DiaryEntryDao
     private val allPlantsLive: LiveData<List<PlantItem>>
     private val allIncompleteTasks: LiveData<List<CalendarTask>>
 
@@ -42,10 +44,14 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     private val syncing = AtomicBoolean(false)
 
+    private val _allPlantsList = MutableLiveData<List<PlantItem>>()
+    val allPlantsList: LiveData<List<PlantItem>> = _allPlantsList
+
     init {
         val db = AppDatabase.getDatabase(application)
         plantRepository = PlantRepository(db.plantDao())
         taskDao = db.calendarTaskDao()
+        diaryDao = db.diaryEntryDao()
         allPlantsLive = plantRepository.getAllPlants()
         allIncompleteTasks = taskDao.getIncompleteTasks()
 
@@ -62,6 +68,12 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         allPlantsLive.removeObserver(plantsObserver)
         allIncompleteTasks.removeObserver(tasksObserver)
         super.onCleared()
+    }
+
+    fun loadAllPlants() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _allPlantsList.postValue(taskDao.getAllPlantsSnapshot())
+        }
     }
 
     fun onDateSelected(calendar: Calendar) {
@@ -189,6 +201,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     fun onTaskChecked(task: CalendarTask, isChecked: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val plantId = task.plantId
+            val currentTime = System.currentTimeMillis()
 
             if (plantId == null) {
                 if (task.taskType == TaskType.CUSTOM) {
@@ -200,25 +213,48 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
             val plant = plantRepository.getPlantByIdSnapshot(plantId) ?: return@launch
             val updatedTask = task.copy()
-            val updatedPlant: PlantItem = if (isChecked) {
+            val updatedPlant: PlantItem
+            val diaryContent: String
+
+            if (isChecked) {
                 updatedTask.isCompleted = true
                 updatedTask.previousTimestamp = when (task.taskType) {
-                    TaskType.WATERING -> plant.lastWateredTimestamp
-                    TaskType.PESTICIDE -> plant.lastPesticideTimestamp
-                    else -> 0L
+                    TaskType.WATERING -> {
+                        diaryContent = "물 주기 완료"
+                        plant.lastWateredTimestamp
+                    }
+                    TaskType.PESTICIDE -> {
+                        diaryContent = "살충제 완료"
+                        plant.lastPesticideTimestamp
+                    }
+                    TaskType.CUSTOM -> {
+                        diaryContent = task.title.substringAfter("- ").trim()
+                        0L
+                    }
                 }
-                when (task.taskType) {
-                    TaskType.WATERING -> plant.copy(lastWateredTimestamp = System.currentTimeMillis())
-                    TaskType.PESTICIDE -> plant.copy(lastPesticideTimestamp = System.currentTimeMillis())
+                updatedPlant = when (task.taskType) {
+                    TaskType.WATERING -> plant.copy(lastWateredTimestamp = currentTime)
+                    TaskType.PESTICIDE -> plant.copy(lastPesticideTimestamp = currentTime)
                     else -> plant
                 }
+
+                diaryDao.insert(
+                    com.Plant_application.data.database.DiaryEntry(
+                        plantId = plantId,
+                        timestamp = currentTime,
+                        content = diaryContent,
+                        linkedTaskId = task.id
+                    )
+                )
+
             } else {
                 updatedTask.isCompleted = false
-                when (task.taskType) {
+                updatedPlant = when (task.taskType) {
                     TaskType.WATERING -> plant.copy(lastWateredTimestamp = updatedTask.previousTimestamp)
                     TaskType.PESTICIDE -> plant.copy(lastPesticideTimestamp = updatedTask.previousTimestamp)
                     else -> plant
                 }
+                diaryDao.deleteByLinkedTaskId(task.id)
             }
             plantRepository.updatePlant(updatedPlant)
             taskDao.update(updatedTask)
@@ -226,16 +262,30 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addCustomTask(title: String) {
+    fun addCustomTask(title: String, plantIds: List<Int>) {
         viewModelScope.launch(Dispatchers.IO) {
             val date = _selectedDate.value ?: return@launch
-            val task = CalendarTask(
-                plantId = null,
-                taskType = TaskType.CUSTOM,
-                title = title,
-                dueDate = date
-            )
-            taskDao.insert(task)
+
+            if (plantIds.isEmpty()) {
+                val task = CalendarTask(
+                    plantId = null,
+                    taskType = TaskType.CUSTOM,
+                    title = title,
+                    dueDate = date
+                )
+                taskDao.insert(task)
+            } else {
+                plantIds.forEach { plantId ->
+                    val plant = plantRepository.getPlantByIdSnapshot(plantId)
+                    val task = CalendarTask(
+                        plantId = plantId,
+                        taskType = TaskType.CUSTOM,
+                        title = "${plant?.nickname ?: ""} - $title",
+                        dueDate = date
+                    )
+                    taskDao.insert(task)
+                }
+            }
             triggerSync()
         }
     }

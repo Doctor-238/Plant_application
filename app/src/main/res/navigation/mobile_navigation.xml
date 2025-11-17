@@ -64,12 +64,12 @@
         android:label="fragment_add_plant"
         tools:layout="@layout/fragment_add_plant">
         <argument
-         android:name="plantAnalysis"
+            android:name="plantAnalysis"
             app:argType="com.Plant_application.ui.add.PlantAnalysis"
             app:nullable="true"
             android:defaultValue="@null" />
         <argument
-             android:name="imageUri"
+            android:name="imageUri"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
@@ -91,6 +91,9 @@
         <action
             android:id="@+id/action_plantDetailFragment_to_editPlantFragment"
             app:destination="@id/editPlantFragment" />
+        <action
+            android:id="@+id/action_plantDetailFragment_to_diaryListFragment"
+            app:destination="@id/diaryListFragment" />
     </fragment>
 
     <fragment
@@ -101,6 +104,22 @@
         <argument
             android:name="plantId"
             app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/diaryListFragment"
+        android:name="com.Plant_application.ui.journal.DiaryListFragment"
+        android:label="DiaryListFragment"
+        tools:layout="@layout/item_journal_detail">
+        <argument
+            android:name="plantId"
+            app:argType="integer" />
+        <argument
+            android:name="plantName"
+            app:argType="string" />
+        <argument
+            android:name="plantImageUri"
+            app:argType="string" />
     </fragment>
 
 </navigation>

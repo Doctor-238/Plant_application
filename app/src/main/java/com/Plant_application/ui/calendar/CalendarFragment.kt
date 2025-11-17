@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.Plant_application.R
+import com.Plant_application.data.database.PlantItem
 import com.Plant_application.databinding.FragmentCalendarBinding
 import java.util.Calendar
 
@@ -35,6 +36,8 @@ class CalendarFragment : Fragment(R.layout.fragment_calendar) {
         setupListeners()
         setupBackButtonHandler()
         observeViewModel()
+
+        viewModel.loadAllPlants()
     }
 
     private fun setupRecyclerView() {
@@ -123,6 +126,17 @@ class CalendarFragment : Fragment(R.layout.fragment_calendar) {
 
     private fun showAddTodoDialog() {
         val context = requireContext()
+        val plants = viewModel.allPlantsList.value ?: emptyList()
+
+        if (plants.isEmpty()) {
+            showSimpleAddTodoDialog()
+        } else {
+            showPlantSelectAddTodoDialog(plants)
+        }
+    }
+
+    private fun showSimpleAddTodoDialog() {
+        val context = requireContext()
         val editText = EditText(context).apply {
             inputType = InputType.TYPE_CLASS_TEXT
             hint = "할 일 입력"
@@ -135,12 +149,46 @@ class CalendarFragment : Fragment(R.layout.fragment_calendar) {
         }
 
         AlertDialog.Builder(context)
-            .setTitle("할 일 추가")
+            .setTitle("개인 할 일 추가")
+            .setMessage("등록된 식물이 없습니다. 개인 일정을 추가합니다.")
             .setView(container)
             .setPositiveButton("추가") { _, _ ->
                 val title = editText.text.toString()
                 if (title.isNotBlank()) {
-                    viewModel.addCustomTask(title)
+                    viewModel.addCustomTask(title, emptyList())
+                } else {
+                    Toast.makeText(context, "할 일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    private fun showPlantSelectAddTodoDialog(plants: List<PlantItem>) {
+        val context = requireContext()
+        val plantNames = plants.map { it.nickname }.toTypedArray()
+        val selectedPlants = BooleanArray(plants.size)
+        val selectedPlantIds = mutableListOf<Int>()
+
+        val layout = layoutInflater.inflate(R.layout.dialog_add_task, null) as FrameLayout
+        val editText = layout.findViewById<EditText>(R.id.et_task_title)
+
+        AlertDialog.Builder(context)
+            .setTitle("할 일 추가")
+            .setView(layout)
+            .setMultiChoiceItems(plantNames, selectedPlants) { _, which, isChecked ->
+                selectedPlants[which] = isChecked
+            }
+            .setPositiveButton("추가") { _, _ ->
+                val title = editText.text.toString()
+                if (title.isNotBlank()) {
+                    selectedPlantIds.clear()
+                    for (i in selectedPlants.indices) {
+                        if (selectedPlants[i]) {
+                            selectedPlantIds.add(plants[i].id)
+                        }
+                    }
+                    viewModel.addCustomTask(title, selectedPlantIds)
                 } else {
                     Toast.makeText(context, "할 일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                 }

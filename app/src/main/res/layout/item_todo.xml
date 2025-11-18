@@ -3,18 +3,47 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/card_container"
+    android:background="@drawable/bg_todo_rounded"
     android:orientation="horizontal"
     android:paddingVertical="12dp"
     android:paddingHorizontal="16dp"
     android:layout_marginBottom="8dp"
     android:gravity="center_vertical">
 
-    <CheckBox
-        android:id="@+id/checkbox_todo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:buttonTint="@color/card_accent"/>
+
+    <FrameLayout
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="12dp">
+
+
+        <View
+            android:id="@+id/check_background_circle"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_white_circle" />
+
+
+        <CheckBox
+            android:id="@+id/checkbox_todo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:button="@null"
+            android:background="@null" />
+
+
+        <ImageView
+            android:id="@+id/iv_check_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="-4dp"
+            android:layout_marginStart="4dp"
+            android:src="@drawable/ic_check"
+            android:visibility="gone" />
+    </FrameLayout>
+
 
     <TextView
         android:id="@+id/tv_todo_title"
@@ -23,7 +52,8 @@
         android:layout_weight="1"
         android:textSize="16sp"
         android:textColor="@color/text_primary"
-        tools:text="몬스테라 물 주기"/>
+        tools:text="몬스테라 물 주기" />
+
 
     <ImageView
         android:id="@+id/iv_delete_checkbox"
@@ -31,7 +61,8 @@
         android:layout_height="32dp"
         android:layout_marginStart="8dp"
         android:visibility="gone"
-        tools:src="@drawable/ic_checkbox_unchecked_custom"
-        tools:visibility="visible" />
+        tools:visibility="gone"
+        tools:src="@drawable/ic_checkbox_unchecked_custom" />
 
 </LinearLayout>
+

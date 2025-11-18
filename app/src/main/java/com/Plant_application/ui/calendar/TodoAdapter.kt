@@ -27,7 +27,14 @@ class TodoAdapter(
     }
 
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
-        holder.bind(getItem(position), onTaskClick, onTaskLongClick, isDeleteMode(), isSelected(getItem(position).id), isEditable(getItem(position).dueDate))
+        holder.bind(
+            getItem(position),
+            onTaskClick,
+            onTaskLongClick,
+            isDeleteMode(),
+            isSelected(getItem(position).id),
+            isEditable(getItem(position).dueDate)
+        )
     }
 
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -43,6 +50,7 @@ class TodoAdapter(
     }
 
     class TodoViewHolder(private val binding: ItemTodoBinding) : RecyclerView.ViewHolder(binding.root) {
+
         fun bind(
             task: CalendarTask,
             onClick: (CalendarTask) -> Unit,
@@ -52,19 +60,32 @@ class TodoAdapter(
             isEditable: Boolean
         ) {
             binding.tvTodoTitle.text = task.title
-
             updateCheckedState(task.isCompleted)
+
+            // 체크박스 활성/비활성
             binding.checkboxTodo.isEnabled = isEditable
 
+            // 🔥 기존 리스너 제거 후 체크 상태 반영
             binding.checkboxTodo.setOnCheckedChangeListener(null)
             binding.checkboxTodo.isChecked = task.isCompleted
 
-            binding.checkboxTodo.setOnCheckedChangeListener { _, _ ->
+            // 🔥 체크 아이콘 초기 표시 (체크 여부에 따라)
+            binding.ivCheckIcon.visibility =
+                if (task.isCompleted) View.VISIBLE else View.GONE
+
+            // 🔥 체크박스 클릭 리스너
+            binding.checkboxTodo.setOnCheckedChangeListener { _, isChecked ->
                 if (!isDelete) {
+                    // 기존 로직(데이터 업데이트)
                     onClick(task)
+
+                    // 🔥 체크 UI 업데이트
+                    binding.ivCheckIcon.visibility =
+                        if (isChecked) View.VISIBLE else View.GONE
                 }
             }
 
+            // 🔥 일반 클릭 / 롱클릭 동작 유지
             itemView.setOnClickListener {
                 if (isDelete) {
                     onLongClick(task)
@@ -85,11 +106,17 @@ class TodoAdapter(
 
         private fun updateCheckedState(isCompleted: Boolean) {
             if (isCompleted) {
-                binding.tvTodoTitle.paintFlags = binding.tvTodoTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                binding.tvTodoTitle.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_secondary))
+                binding.tvTodoTitle.paintFlags =
+                    binding.tvTodoTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                binding.tvTodoTitle.setTextColor(
+                    ContextCompat.getColor(itemView.context, R.color.text_secondary)
+                )
             } else {
-                binding.tvTodoTitle.paintFlags = binding.tvTodoTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-                binding.tvTodoTitle.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_primary))
+                binding.tvTodoTitle.paintFlags =
+                    binding.tvTodoTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                binding.tvTodoTitle.setTextColor(
+                    ContextCompat.getColor(itemView.context, R.color.text_primary)
+                )
             }
         }
 
@@ -99,7 +126,8 @@ class TodoAdapter(
 
             if (isDelete) {
                 binding.ivDeleteCheckbox.setImageResource(
-                    if (isSelected) R.drawable.ic_checkbox_checked_custom else R.drawable.ic_checkbox_unchecked_custom
+                    if (isSelected) R.drawable.ic_checkbox_checked_custom
+                    else R.drawable.ic_checkbox_unchecked_custom
                 )
             }
         }
@@ -110,6 +138,7 @@ class TodoAdapter(
             override fun areItemsTheSame(oldItem: CalendarTask, newItem: CalendarTask): Boolean {
                 return oldItem.id == newItem.id
             }
+
             override fun areContentsTheSame(oldItem: CalendarTask, newItem: CalendarTask): Boolean {
                 return oldItem == newItem
             }

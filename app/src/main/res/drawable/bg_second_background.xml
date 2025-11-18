@@ -7,8 +7,8 @@
 
     <!-- 윗쪽만 둥글게 -->
     <corners
-        android:topLeftRadius="24dp"
-        android:topRightRadius="24dp"
+        android:topLeftRadius="30dp"
+        android:topRightRadius="30dp"
         android:bottomLeftRadius="0dp"
         android:bottomRightRadius="0dp" />
 

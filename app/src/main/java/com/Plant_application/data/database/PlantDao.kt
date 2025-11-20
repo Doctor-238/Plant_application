@@ -47,4 +47,10 @@ interface PlantDao {
 
     @Query("DELETE FROM plants")
     suspend fun clearAll()
+
+    @Query("SELECT * FROM plants WHERE needsAttentionTimestamp IS NOT NULL ORDER BY needsAttentionTimestamp ASC")
+    fun getNeedsAttentionPlants(): LiveData<List<PlantItem>>
+
+    @Query("SELECT * FROM plants WHERE needsAttentionTimestamp IS NOT NULL ORDER BY needsAttentionTimestamp ASC")
+    suspend fun getNeedsAttentionPlantsSnapshot(): List<PlantItem>
 }

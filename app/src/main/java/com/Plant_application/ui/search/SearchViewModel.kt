@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import com.Plant_application.R
 import com.Plant_application.data.api.WeatherApiService
 import com.Plant_application.data.api.WeatherResponse
+import com.Plant_application.data.api.WikimediaApiService
 import com.Plant_application.data.preference.PreferenceManager
 import com.Plant_application.data.repository.WeatherRepository
 import com.Plant_application.ui.add.PlantAnalysis
@@ -34,6 +35,7 @@ import java.io.IOException
 class SearchViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs: PreferenceManager
     private val weatherRepository: WeatherRepository
+    private val wikimediaApiService: WikimediaApiService by lazy { WikimediaApiService.create() }
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
     private var cancellationTokenSource = CancellationTokenSource()
 
@@ -48,6 +50,12 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _weatherRecommendation = MutableLiveData<PlantAnalysis?>(null)
     val weatherRecommendation: LiveData<PlantAnalysis?> = _weatherRecommendation
+
+    private val _surveyRecommendationImage = MutableLiveData<String?>()
+    val surveyRecommendationImage: LiveData<String?> = _surveyRecommendationImage
+
+    private val _weatherRecommendationImage = MutableLiveData<String?>()
+    val weatherRecommendationImage: LiveData<String?> = _weatherRecommendationImage
 
     private var generativeModel: GenerativeModel? = null
 
@@ -73,6 +81,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                     }
                     val rec = runAiRecommendation(space, sunlight, temp, humidity)
                     _surveyRecommendation.postValue(rec)
+                    rec?.official_name?.let {
+                        val imageUrl = fetchImageFromWikimedia(it)
+                        _surveyRecommendationImage.postValue(imageUrl)
+                    }
                 } catch (e: Exception) {
                     Log.e("SearchViewModel", "Survey rec failed", e)
                     _recommendationError.postValue("설문 기반 추천 실패: ${e.message}")
@@ -83,15 +95,21 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 try {
                     val location = getFreshLocation()
                     val weather = fetchWeather(location)
+                    val currentForecast = weather.list.firstOrNull()
+                        ?: throw IOException("날씨 예보 정보가 없습니다.")
 
-                    val tempRating = tempToRating(weather.main.temp)
-                    val humidityRating = humidityToRating(weather.main.humidity)
+                    val tempRating = tempToRating(currentForecast.main.temp)
+                    val humidityRating = humidityToRating(currentForecast.main.humidity)
 
                     val space = prefs.surveySpace.takeIf { it != -1 } ?: 3
                     val sunlight = prefs.surveySunlight.takeIf { it != -1 } ?: 3
 
                     val rec = runAiRecommendation(space, sunlight, tempRating, humidityRating)
                     _weatherRecommendation.postValue(rec)
+                    rec?.official_name?.let {
+                        val imageUrl = fetchImageFromWikimedia(it)
+                        _weatherRecommendationImage.postValue(imageUrl)
+                    }
                 } catch (e: Exception) {
                     Log.e("SearchViewModel", "Weather rec failed", e)
                     val errorMsg = when (e) {
@@ -123,7 +141,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private suspend fun fetchWeather(location: Location): WeatherResponse {
         val apiKey = getApplication<Application>().getString(R.string.openweathermap_api_key)
-        val response = weatherRepository.getCurrentWeather(location.latitude, location.longitude, apiKey)
+        val response = weatherRepository.getFiveDayForecast(location.latitude, location.longitude, apiKey)
         if (response.isSuccessful && response.body() != null) {
             return response.body()!!
         } else {
@@ -208,6 +226,37 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             } catch (e: Exception) {
                 Log.e("SearchViewModel", "AI recommendation failed", e)
                 throw e
+            }
+        }
+    }
+
+    private suspend fun fetchImageFromWikimedia(plantName: String): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val summaryResponse = wikimediaApiService.getPageSummary(title = plantName)
+                if (summaryResponse.isSuccessful) {
+                    val imageUrl = summaryResponse.body()?.thumbnail?.source
+                    if (imageUrl != null) return@withContext imageUrl
+                }
+
+                Log.w("SearchViewModel", "getPageSummary failed. Falling back to search API.")
+                val searchResponse = wikimediaApiService.searchPages(srsearch = plantName)
+                if (searchResponse.isSuccessful) {
+                    val firstTitle = searchResponse.body()?.query?.search?.firstOrNull()?.title
+
+                    if (firstTitle != null) {
+                        val retryResponse = wikimediaApiService.getPageSummary(title = firstTitle)
+                        if (retryResponse.isSuccessful) {
+                            return@withContext retryResponse.body()?.thumbnail?.source
+                        }
+                    }
+                }
+                Log.w("SearchViewModel", "All Wikimedia image fetch attempts failed.")
+                null
+
+            } catch (e: Exception) {
+                Log.e("SearchViewModel", "fetchImageFromWikimedia failed", e)
+                null
             }
         }
     }

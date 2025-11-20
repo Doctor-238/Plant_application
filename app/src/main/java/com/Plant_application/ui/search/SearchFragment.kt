@@ -14,16 +14,18 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.navGraphViewModels
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentSearchBinding
 import com.Plant_application.ui.add.PlantAnalysis
+import com.bumptech.glide.Glide
 
 class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: SearchViewModel by viewModels()
+    private val viewModel: SearchViewModel by navGraphViewModels(R.id.mobile_navigation)
 
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -124,6 +126,24 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 binding.tvWeatherDetails.text = formatAnalysisDetails(analysis)
             } else {
                 binding.cardWeatherRec.isVisible = false
+            }
+        }
+
+        viewModel.surveyRecommendationImage.observe(viewLifecycleOwner) { imageUrl ->
+            imageUrl?.let {
+                Glide.with(this)
+                    .load(it)
+                    .placeholder(R.drawable.plant2)
+                    .into(binding.ivSurveyImage)
+            }
+        }
+
+        viewModel.weatherRecommendationImage.observe(viewLifecycleOwner) { imageUrl ->
+            imageUrl?.let {
+                Glide.with(this)
+                    .load(it)
+                    .placeholder(R.drawable.plant1)
+                    .into(binding.ivWeatherImage)
             }
         }
     }

@@ -157,21 +157,18 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 binding.groupWeatherData.visibility = View.VISIBLE
                 binding.tvWeatherPlaceholder.visibility = View.GONE
 
-                binding.tvLocation.text = weather.name
-                val weatherCondition = weather.weather.firstOrNull()
-                if (weatherCondition != null) {
-                    val description = weatherCondition.description.replaceFirstChar {
-                        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-                    }
-                    binding.tvWeatherDesc.text = description
-                    binding.ivWeatherIcon.setImageResource(getWeatherIcon(weatherCondition.icon))
+                binding.tvLocation.text = weather.locationName
+                val description = weather.weatherCondition.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
                 }
+                binding.tvWeatherDesc.text = description
+                binding.ivWeatherIcon.setImageResource(getWeatherIcon(weather.weatherIcon))
 
                 val sdf = SimpleDateFormat("yyyy.MM.dd EEEE HH:mm", Locale.KOREAN)
                 binding.tvDateTime.text = sdf.format(Date())
 
-                binding.tvTemp.text = String.format(Locale.KOREAN, "%.0f°", weather.main.temp)
-                binding.tvHumidity.text = "${weather.main.humidity}%"
+                binding.tvTemp.text = String.format(Locale.KOREAN, "%.0f°", weather.currentTemp)
+                binding.tvHumidity.text = "${weather.humidity}%"
             } else if (homeViewModel.isLoading.value == false) {
                 binding.groupWeatherData.visibility = View.GONE
                 binding.tvWeatherPlaceholder.visibility = View.VISIBLE
@@ -179,7 +176,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         }
 
-        homeViewModel.allPlants.observe(viewLifecycleOwner) { plants ->
+        homeViewModel.needsAttentionPlants.observe(viewLifecycleOwner) { plants ->
             binding.tvEmptyList.isVisible = plants.isEmpty()
             binding.rvPlants.isVisible = plants.isNotEmpty()
             plantAdapter.submitList(plants)

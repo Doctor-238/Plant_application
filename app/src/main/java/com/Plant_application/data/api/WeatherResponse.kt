@@ -5,20 +5,20 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class WeatherResponse(
-    @SerialName("weather")
-    val weather: List<Weather>,
-    @SerialName("main")
-    val main: Main,
-    @SerialName("name")
-    var name: String
+    @SerialName("list")
+    val list: List<Forecast>
 )
 
 @Serializable
-data class Weather(
-    @SerialName("description")
-    val description: String,
-    @SerialName("icon")
-    val icon: String
+data class Forecast(
+    @SerialName("dt_txt")
+    val dt_txt: String,
+    @SerialName("main")
+    val main: Main,
+    @SerialName("weather")
+    val weather: List<Weather>,
+    @SerialName("pop")
+    val pop: Double
 )
 
 @Serializable
@@ -27,6 +27,18 @@ data class Main(
     val temp: Double,
     @SerialName("feels_like")
     val feels_like: Double,
+    @SerialName("temp_min")
+    val temp_min: Double,
+    @SerialName("temp_max")
+    val temp_max: Double,
     @SerialName("humidity")
     val humidity: Int
+)
+
+@Serializable
+data class Weather(
+    @SerialName("description")
+    val description: String,
+    @SerialName("icon")
+    val icon: String
 )

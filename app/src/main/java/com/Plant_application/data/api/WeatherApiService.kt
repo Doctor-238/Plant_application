@@ -11,8 +11,8 @@ import okhttp3.MediaType.Companion.toMediaType
 import kotlinx.serialization.json.Json
 
 interface WeatherApiService {
-    @GET("weather")
-    suspend fun getCurrentWeather(
+    @GET("forecast")
+    suspend fun getFiveDayForecast(
         @Query("lat") lat: Double,
         @Query("lon") lon: Double,
         @Query("appid") apiKey: String,

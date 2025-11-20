@@ -87,11 +87,12 @@
 
                         <ImageView
                             android:id="@+id/iv_survey_image"
-                            android:layout_width="80dp"
-                            android:layout_height="80dp"
+                            android:layout_width="120dp"
+                            android:layout_height="120dp"
                             android:layout_gravity="center_horizontal"
                             android:layout_marginTop="8dp"
-                            android:src="@drawable/plant2" />
+                            android:scaleType="centerCrop"
+                            tools:src="@drawable/plant2" />
 
                         <TextView
                             android:id="@+id/tv_survey_title"
@@ -142,11 +143,12 @@
 
                         <ImageView
                             android:id="@+id/iv_weather_image"
-                            android:layout_width="80dp"
-                            android:layout_height="80dp"
+                            android:layout_width="120dp"
+                            android:layout_height="120dp"
                             android:layout_gravity="center_horizontal"
                             android:layout_marginTop="8dp"
-                            android:src="@drawable/plant1" />
+                            android:scaleType="centerCrop"
+                            tools:src="@drawable/plant1" />
 
                         <TextView
                             android:id="@+id/tv_weather_title"

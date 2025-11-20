@@ -12,9 +12,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.Plant_application.R
+import com.Plant_application.background.PlantUpdateWorker
+import com.Plant_application.data.api.Forecast
 import com.Plant_application.data.api.WeatherApiService
-import com.Plant_application.data.api.WeatherResponse
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.DiaryEntryDao
 import com.Plant_application.data.database.PlantItem
@@ -30,6 +33,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @SuppressLint("MissingPermission")
@@ -40,15 +45,16 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val diaryDao: DiaryEntryDao
     private val prefs: PreferenceManager
     private val geocoder = Geocoder(application, Locale.KOREAN)
+    private val workManager = WorkManager.getInstance(application)
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
     private var fetchJob: Job? = null
     private var cancellationTokenSource = CancellationTokenSource()
 
-    private val _weatherInfo = MutableLiveData<WeatherResponse?>()
-    val weatherInfo: LiveData<WeatherResponse?> = _weatherInfo
+    private val _weatherInfo = MutableLiveData<DailyWeatherSummary?>()
+    val weatherInfo: LiveData<DailyWeatherSummary?> = _weatherInfo
 
-    val allPlants: LiveData<List<PlantItem>>
+    val needsAttentionPlants: LiveData<List<PlantItem>>
 
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
@@ -64,7 +70,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val plantDao = db.plantDao()
         diaryDao = db.diaryEntryDao()
         plantRepository = PlantRepository(plantDao)
-        allPlants = plantRepository.getAllPlants()
+        needsAttentionPlants = plantRepository.getNeedsAttentionPlants()
         prefs = PreferenceManager(application)
     }
 
@@ -112,6 +118,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
                 val apiKey = getApplication<Application>().getString(R.string.openweathermap_api_key)
                 fetchWeatherForLocation(locationToFetch!!, apiKey)
+
+                val workRequest = OneTimeWorkRequestBuilder<PlantUpdateWorker>().build()
+                workManager.enqueue(workRequest)
 
             } catch (e: Exception) {
                 handleFetchError(e)
@@ -162,20 +171,46 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
 
     private suspend fun fetchWeatherForLocation(location: Location, apiKey: String) {
-        val response = weatherRepository.getCurrentWeather(location.latitude, location.longitude, apiKey)
+        val response = weatherRepository.getFiveDayForecast(location.latitude, location.longitude, apiKey)
         if (response.isSuccessful && response.body() != null) {
             val weatherData = response.body()!!
             val addressName = getAddressFromLocation(location)
 
-            if (!addressName.isNullOrBlank()) {
-                weatherData.name = addressName
+            val today = LocalDate.now()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val todayForecasts = weatherData.list.filter {
+                LocalDate.parse(it.dt_txt, formatter) == today
             }
 
-            _weatherInfo.postValue(weatherData)
+            if (todayForecasts.isNotEmpty()) {
+                val summary = createDailySummary(todayForecasts, addressName ?: "알 수 없는 위치")
+                _weatherInfo.postValue(summary)
+            } else {
+                _weatherInfo.postValue(null)
+            }
         } else {
             val errorBody = response.errorBody()?.string() ?: "알 수 없는 오류"
             throw IOException("날씨 정보를 가져오는 데 실패했습니다: ${response.code()} $errorBody")
         }
+    }
+
+    private fun createDailySummary(forecasts: List<Forecast>, locationName: String): DailyWeatherSummary {
+        val maxTemp = forecasts.maxOf { it.main.temp_max }
+        val minTemp = forecasts.minOf { it.main.temp_min }
+        val currentTemp = forecasts.firstOrNull()?.main?.temp ?: 0.0
+        val currentHumidity = forecasts.firstOrNull()?.main?.humidity ?: 0
+        val weatherCondition = forecasts.firstOrNull()?.weather?.firstOrNull()?.description ?: "N/A"
+        val weatherIcon = forecasts.firstOrNull()?.weather?.firstOrNull()?.icon ?: "01d"
+
+        return DailyWeatherSummary(
+            locationName = locationName,
+            currentTemp = currentTemp,
+            maxTemp = maxTemp,
+            minTemp = minTemp,
+            humidity = currentHumidity,
+            weatherCondition = weatherCondition,
+            weatherIcon = weatherIcon
+        )
     }
 
     private fun handleFetchError(e: Exception) {
@@ -207,6 +242,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     linkedTaskId = null
                 )
             )
+            triggerBackgroundUpdate()
         }
     }
 
@@ -224,7 +260,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     linkedTaskId = null
                 )
             )
+            triggerBackgroundUpdate()
         }
+    }
+
+    private fun triggerBackgroundUpdate() {
+        val workRequest = OneTimeWorkRequestBuilder<PlantUpdateWorker>().build()
+        workManager.enqueue(workRequest)
     }
 
     override fun onCleared() {

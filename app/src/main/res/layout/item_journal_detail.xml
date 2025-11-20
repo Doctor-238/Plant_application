@@ -103,7 +103,7 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <!--<com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_edit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -111,6 +111,6 @@
         android:src="@drawable/ic_edit"
         app:backgroundTint="#A7D2A1"
         app:layout_anchor="@id/app_bar"
-        app:layout_anchorGravity="bottom|end" />
+        app:layout_anchorGravity="bottom|end" />-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

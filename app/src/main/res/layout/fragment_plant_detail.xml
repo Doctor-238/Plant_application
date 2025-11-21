@@ -144,7 +144,8 @@
             android:src="@drawable/ic_diary"
             android:layout_marginEnd="12dp"
             app:backgroundTint="#A7D2A1"
-            app:tint="@null" />       <!--  아이콘 색 억지로 덮어씌우는 기능 OFF -->
+            app:tint="@null"
+            app:elevation="3dp"/>
 
 
         <!-- ✏ 편집 버튼 -->
@@ -154,7 +155,8 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_edit"
             app:backgroundTint="#A7D2A1"
-            app:tint="@null"/>
+            app:tint="@null"
+            app:elevation="3dp"/>
 
     </LinearLayout>
 

@@ -72,7 +72,9 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
         val navGraph = navController.navInflater.inflate(R.navigation.mobile_navigation)
         val prefs = PreferenceManager(this)
-        if (prefs.isFirstLaunch) {
+
+        // 첫 실행이거나 설문 데이터(예: space)가 없으면 온보딩 화면으로
+        if (prefs.isFirstLaunch || prefs.surveySpace == -1) {
             navGraph.setStartDestination(R.id.onboardingFragment)
             binding.navView.visibility = View.GONE
         } else {

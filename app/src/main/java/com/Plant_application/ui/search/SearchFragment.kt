@@ -13,7 +13,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
 import com.Plant_application.R
 import com.Plant_application.databinding.FragmentSearchBinding
@@ -30,15 +30,14 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            viewModel.loadRecommendations()
-        } else {
+        // 권한 결과와 상관없이 로드 시도 (권한 없으면 설문 기반만이라도 뜨도록)
+        viewModel.loadRecommendations()
+
+        if (!isGranted) {
             if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                showGoToSettingsDialog()
-            } else {
-                Toast.makeText(context, "위치 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
+                // 다시 묻지 않음 상태일 때만 다이얼로그 표시 고민 (여기서는 Toast만)
+                Toast.makeText(context, "위치 권한이 없어 날씨 기반 추천은 제외됩니다.", Toast.LENGTH_SHORT).show()
             }
-            viewModel.loadRecommendations()
         }
     }
 
@@ -46,12 +45,17 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSearchBinding.bind(view)
 
+
         observeViewModel()
         checkPermissionAndLoad()
     }
 
+
+
     private fun checkPermissionAndLoad() {
-        if (viewModel.isLoadingRecommendations.value == true || (viewModel.surveyRecommendation.value != null || viewModel.weatherRecommendation.value != null)) {
+        // 이미 데이터가 있거나 로딩 중이면 스킵
+        if (viewModel.isLoadingRecommendations.value == true ||
+            (viewModel.surveyRecommendation.value != null || viewModel.weatherRecommendation.value != null)) {
             return
         }
 
@@ -70,7 +74,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }
                     .setNegativeButton("거부") { _, _ ->
-                        viewModel.loadRecommendations()
+                        viewModel.loadRecommendations() // 거부해도 설문 기반은 로드
                     }
                     .show()
             }
@@ -80,53 +84,24 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-    private fun showGoToSettingsDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("권한 필요")
-            .setMessage("날씨 정보를 위해 위치 권한이 반드시 필요합니다. '설정'으로 이동하여 권한을 허용해주세요.")
-            .setPositiveButton("설정으로 이동") { _, _ ->
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.fromParts("package", requireContext().packageName, null)
-                }
-                startActivity(intent)
-            }
-            .setNegativeButton("닫기", null)
-            .setCancelable(false)
-            .show()
-    }
-
     private fun observeViewModel() {
         viewModel.isLoadingRecommendations.observe(viewLifecycleOwner) { isLoading ->
             binding.pbRecommendations.isVisible = isLoading
-            if (isLoading) {
-                binding.tvRecommendationError.isVisible = false
-            }
+            updateUIState()
         }
 
-        viewModel.recommendationError.observe(viewLifecycleOwner) { error ->
-            val isLoading = viewModel.isLoadingRecommendations.value ?: false
-            binding.tvRecommendationError.isVisible = !isLoading && error != null
-            binding.tvRecommendationError.text = error
+        viewModel.recommendationError.observe(viewLifecycleOwner) {
+            updateUIState()
         }
 
         viewModel.surveyRecommendation.observe(viewLifecycleOwner) { analysis ->
-            if (analysis != null) {
-                binding.cardSurveyRec.isVisible = true
-                binding.tvSurveyTitle.text = analysis.official_name
-                binding.tvSurveyDetails.text = formatAnalysisDetails(analysis)
-            } else {
-                binding.cardSurveyRec.isVisible = false
-            }
+            updateSurveyCard(analysis)
+            updateUIState()
         }
 
         viewModel.weatherRecommendation.observe(viewLifecycleOwner) { analysis ->
-            if (analysis != null) {
-                binding.cardWeatherRec.isVisible = true
-                binding.tvWeatherTitle.text = analysis.official_name
-                binding.tvWeatherDetails.text = formatAnalysisDetails(analysis)
-            } else {
-                binding.cardWeatherRec.isVisible = false
-            }
+            updateWeatherCard(analysis)
+            updateUIState()
         }
 
         viewModel.surveyRecommendationImage.observe(viewLifecycleOwner) { imageUrl ->
@@ -145,6 +120,48 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     .placeholder(R.drawable.plant1)
                     .into(binding.ivWeatherImage)
             }
+        }
+    }
+
+    private fun updateUIState() {
+        val isLoading = viewModel.isLoadingRecommendations.value ?: false
+        val hasSurvey = viewModel.surveyRecommendation.value != null
+        val hasWeather = viewModel.weatherRecommendation.value != null
+        val errorMsg = viewModel.recommendationError.value
+
+        // 로딩 중이면 에러 숨김
+        if (isLoading) {
+            binding.tvRecommendationError.isVisible = false
+            return
+        }
+
+        // 로딩 끝났는데 둘 다 없으면 에러(또는 안내) 표시
+        if (!hasSurvey && !hasWeather) {
+            binding.tvRecommendationError.isVisible = true
+            binding.tvRecommendationError.text = errorMsg ?: "추천할 수 있는 식물이 없습니다."
+        } else {
+            // 하나라도 있으면 에러 숨김
+            binding.tvRecommendationError.isVisible = false
+        }
+    }
+
+    private fun updateSurveyCard(analysis: PlantAnalysis?) {
+        if (analysis != null) {
+            binding.cardSurveyRec.isVisible = true
+            binding.tvSurveyTitle.text = analysis.official_name
+            binding.tvSurveyDetails.text = formatAnalysisDetails(analysis)
+        } else {
+            binding.cardSurveyRec.isVisible = false
+        }
+    }
+
+    private fun updateWeatherCard(analysis: PlantAnalysis?) {
+        if (analysis != null) {
+            binding.cardWeatherRec.isVisible = true
+            binding.tvWeatherTitle.text = analysis.official_name
+            binding.tvWeatherDetails.text = formatAnalysisDetails(analysis)
+        } else {
+            binding.cardWeatherRec.isVisible = false
         }
     }
 

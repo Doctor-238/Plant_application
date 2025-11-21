@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.journal.PlantDetailFragment">
+    tools:context=".ui.journal.DiaryListFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
@@ -36,7 +36,57 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                android:visibility="visible"/>
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar_delete"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/primary"
+                app:layout_collapseMode="pin"
+                android:visibility="gone">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:id="@+id/iv_back_delete_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_arrow_back"
+                        app:tint="@color/white"/>
+
+                    <TextView
+                        android:id="@+id/tv_delete_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iv_back_delete_mode"
+                        android:layout_centerVertical="true"
+                        android:text="일지 삭제"
+                        android:textColor="@color/white"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="16dp"/>
+
+                    <Button
+                        android:id="@+id/btn_delete"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="16dp"
+                        android:background="@drawable/bg_delete_button"
+                        app:backgroundTint="@null"
+                        android:enabled="false"
+                        android:text="삭제"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"/>
+                </RelativeLayout>
+            </androidx.appcompat.widget.Toolbar>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
@@ -52,8 +102,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-
-            <!-- ✍️ 식물 일지 작성 섹션 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -63,8 +111,8 @@
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
-            <!-- 입력 영역 -->
             <LinearLayout
+                android:id="@+id/layout_input_area"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -92,7 +140,6 @@
                     android:contentDescription="일지 추가" />
             </LinearLayout>
 
-            <!-- 일지 리스트 -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_diary_list"
                 android:layout_width="match_parent"
@@ -102,15 +149,5 @@
                 tools:listitem="@layout/item_diary_entry" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!--<com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_edit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_edit"
-        app:backgroundTint="#A7D2A1"
-        app:layout_anchor="@id/app_bar"
-        app:layout_anchorGravity="bottom|end" />-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

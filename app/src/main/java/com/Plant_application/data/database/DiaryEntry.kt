@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
             entity = CalendarTask::class,
             parentColumns = ["id"],
             childColumns = ["linkedTaskId"],
-            onDelete = ForeignKey.SET_NULL
+            onDelete = ForeignKey.CASCADE // 일정이 삭제되면 일지도 함께 삭제
         )
     ],
     indices = [Index(value = ["plantId"]), Index(value = ["timestamp"]), Index(value = ["linkedTaskId"])]

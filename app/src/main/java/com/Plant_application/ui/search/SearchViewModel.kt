@@ -266,28 +266,30 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private suspend fun fetchImageFromWikimedia(plantName: String): String? {
         return withContext(Dispatchers.IO) {
             try {
-                // 1. 시도: 정확한 이름 + " 식물" 키워드로 검색하여 모호성 제거 (예: "아비스 식물")
-                val searchResponse = wikimediaApiService.searchPages(srsearch = "$plantName 식물")
-                if (searchResponse.isSuccessful) {
-                    val firstTitle = searchResponse.body()?.query?.search?.firstOrNull()?.title
-
-                    if (firstTitle != null) {
-                        val retryResponse = wikimediaApiService.getPageSummary(title = firstTitle)
-                        if (retryResponse.isSuccessful) {
-                            val imageUrl = retryResponse.body()?.thumbnail?.source
-                            if (imageUrl != null) return@withContext imageUrl
-                        }
-                    }
-                }
-
-                // 2. 시도: 원래 이름으로 검색 (Fallback)
+                // 1. First attempt using getPageSummary (handles redirects well)
                 val summaryResponse = wikimediaApiService.getPageSummary(title = plantName)
                 if (summaryResponse.isSuccessful) {
                     val imageUrl = summaryResponse.body()?.thumbnail?.source
                     if (imageUrl != null) return@withContext imageUrl
                 }
 
-                Log.w("SearchViewModel", "Image fetch failed for $plantName")
+                // 2. Fallback: If summary failed, use the search API
+                Log.w("SearchViewModel", "getPageSummary failed. Falling back to search API.")
+                val searchResponse = wikimediaApiService.searchPages(srsearch = plantName)
+                if (searchResponse.isSuccessful) {
+                    val firstTitle = searchResponse.body()?.query?.search?.firstOrNull()?.title
+
+                    if (firstTitle != null) {
+                        // 3. Retry getPageSummary with the title from the search result
+                        val retryResponse = wikimediaApiService.getPageSummary(title = firstTitle)
+                        if (retryResponse.isSuccessful) {
+                            return@withContext retryResponse.body()?.thumbnail?.source
+                        }
+                    }
+                }
+
+                // 4. If all else fails, return null
+                Log.w("SearchViewModel", "All Wikimedia image fetch attempts failed.")
                 null
 
             } catch (e: Exception) {

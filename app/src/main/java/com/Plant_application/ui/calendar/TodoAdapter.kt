@@ -53,17 +53,30 @@ class TodoAdapter(
         ) {
             binding.tvTodoTitle.text = task.title
 
+            // 텍스트 스타일(취소선)
             updateCheckedState(task.isCompleted)
-            binding.checkboxTodo.isEnabled = isEditable
 
+// 체크 아이콘 표시/숨김 처리
+            binding.ivCheck.visibility =
+                if (task.isCompleted) View.VISIBLE else View.GONE
+
+// 체크박스는 클릭만 담당
             binding.checkboxTodo.setOnCheckedChangeListener(null)
             binding.checkboxTodo.isChecked = task.isCompleted
+            binding.checkboxTodo.isEnabled = isEditable
 
-            binding.checkboxTodo.setOnCheckedChangeListener { _, _ ->
+
+            binding.checkboxTodo.setOnCheckedChangeListener { _, isChecked ->
                 if (!isDelete) {
+                    // 체크 표시 토글
+                    binding.ivCheck.visibility =
+                        if (isChecked) View.VISIBLE else View.GONE
+
+                    // 데이터 업데이트 요청
                     onClick(task)
                 }
             }
+
 
             itemView.setOnClickListener {
                 if (isDelete) {

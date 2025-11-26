@@ -219,14 +219,14 @@
                 android:paddingHorizontal="4dp"
                 android:paddingVertical="2dp"
                 android:text="💧 물 주기"
+                android:translationY="4dp"
                 android:textColor="@android:color/black"
                 android:textSize="12sp"
                 app:backgroundTint="@android:color/transparent"
                 app:cornerRadius="8dp"
                 app:iconTint="@android:color/black"
                 app:strokeColor="#A3C9A8"
-                app:strokeWidth="1dp"
-                />
+                app:strokeWidth="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_pesticide_check"
@@ -241,6 +241,7 @@
                 android:paddingVertical="2dp"
                 android:paddingHorizontal="4dp"
                 android:includeFontPadding="false"
+                android:translationY="4dp"
                 android:textColor="@android:color/black"
                 app:backgroundTint="@android:color/transparent"
                 app:iconTint="@android:color/black"

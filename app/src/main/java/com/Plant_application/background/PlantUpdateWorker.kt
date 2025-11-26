@@ -8,13 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.ActivityCompat
-import androidx.core.os.bundleOf
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -40,7 +39,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 
 class PlantUpdateWorker(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
@@ -132,16 +130,30 @@ class PlantUpdateWorker(private val context: Context, workerParams: WorkerParame
         }
     }
 
-    private suspend fun getFreshLocation() = if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-        try {
-            LocationServices.getFusedLocationProviderClient(context)
-                .getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, CancellationTokenSource().token)
-                .await()
+    private suspend fun getFreshLocation(): android.location.Location? {
+        val hasFine = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasFine && !hasCoarse) {
+            Log.w("PlantUpdateWorker", "No location permission granted")
+            return null
+        }
+
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+        return try {
+            val lastLocation = fusedLocationClient.lastLocation.await()
+            if (lastLocation != null) {
+                return lastLocation
+            }
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                CancellationTokenSource().token
+            ).await()
         } catch (e: Exception) {
+            Log.e("PlantUpdateWorker", "Failed to get location", e)
             null
         }
-    } else {
-        null
     }
 
     private fun checkWatering(plant: PlantItem, now: Long): Pair<Boolean, Boolean> {
@@ -249,8 +261,12 @@ class PlantUpdateWorker(private val context: Context, workerParams: WorkerParame
 
         PlantWidgetProvider.setupClickIntents(context, appWidgetId, views)
 
-        val plantViewIds = listOf(R.id.widget_plant_1, R.id.widget_plant_2, R.id.widget_plant_3)
-        plantViewIds.forEach { views.setViewVisibility(it, View.GONE) }
+        // 초기화: 식물 그룹과 구분선 모두 숨김
+        val plantGroups = listOf(R.id.widget_plant_group_1, R.id.widget_plant_group_2, R.id.widget_plant_group_3)
+        plantGroups.forEach { views.setViewVisibility(it, View.GONE) }
+
+        views.setViewVisibility(R.id.widget_divider_1, View.GONE)
+        views.setViewVisibility(R.id.widget_divider_2, View.GONE)
 
         if (plants.isEmpty()) {
             views.setViewVisibility(R.id.ll_widget_plant_images, View.GONE)
@@ -259,45 +275,77 @@ class PlantUpdateWorker(private val context: Context, workerParams: WorkerParame
             views.setViewVisibility(R.id.ll_widget_plant_images, View.VISIBLE)
             views.setViewVisibility(R.id.widget_empty_view, View.GONE)
 
-            val plant1 = plants.getOrNull(0)
-            val plant2 = plants.getOrNull(1)
-            val plant3 = plants.getOrNull(2)
+            val itemsToShow = plants.take(3)
 
-            val itemsToShow = listOf(plant1, plant2, plant3)
+            // 4개의 ID: (Container, Image, Name, Reason)
             val itemViews = listOf(
-                R.id.widget_plant_1 to (R.id.widget_item_image_internal to R.id.widget_item_name_internal),
-                R.id.widget_plant_2 to (R.id.widget_item_image_internal to R.id.widget_item_name_internal),
-                R.id.widget_plant_3 to (R.id.widget_item_image_internal to R.id.widget_item_name_internal)
+                listOf(R.id.widget_plant_group_1, R.id.iv_widget_plant_1, R.id.tv_widget_plant_1, R.id.tv_widget_reason_1),
+                listOf(R.id.widget_plant_group_2, R.id.iv_widget_plant_2, R.id.tv_widget_plant_2, R.id.tv_widget_reason_2),
+                listOf(R.id.widget_plant_group_3, R.id.iv_widget_plant_3, R.id.tv_widget_plant_3, R.id.tv_widget_reason_3)
             )
 
-            if (plants.size == 1) {
-                itemsToShow[0]?.let { setPlantView(views, itemViews[1].first, itemViews[1].second, it) }
-            } else if (plants.size == 2) {
-                itemsToShow[0]?.let { setPlantView(views, itemViews[0].first, itemViews[0].second, it) }
-                itemsToShow[1]?.let { setPlantView(views, itemViews[2].first, itemViews[2].second, it) }
-            } else {
-                itemsToShow.forEachIndexed { index, plant ->
-                    plant?.let { setPlantView(views, itemViews[index].first, itemViews[index].second, it) }
-                }
+            // 1개일 때: 가운데(2번) 표시, 구분선 없음
+            if (itemsToShow.size == 1) {
+                setPlantView(views, itemViews[1], itemsToShow[0])
+            }
+            // 2개일 때: 양옆(1번, 3번) 표시, 가운데 구분선(1번, 2번 중 하나) 표시
+            // 여기서는 위젯 레이아웃 구조상 1번과 2번 슬롯을 채우고 사이 구분선(divider_1)을 켜는 게 자연스러움.
+            // 하지만 기존 로직(양끝 배치)을 유지하려면: 1번 그룹, 구분선1(숨김), 2번 그룹(비움), 구분선2(숨김), 3번 그룹 사용 -> 가운데가 빔.
+            // 요청하신 대로 "구분선"이 있으려면 붙여서 배치하는 게 좋으므로 1번, 2번 슬롯을 사용하겠습니다.
+            else if (itemsToShow.size == 2) {
+                setPlantView(views, itemViews[0], itemsToShow[0]) // 왼쪽
+                views.setViewVisibility(R.id.widget_divider_1, View.VISIBLE) // 구분선
+                setPlantView(views, itemViews[1], itemsToShow[1]) // 가운데(사실상 오른쪽 역할)
+                // 이렇게 하면 1, 2번 위치에 뜨고 3번은 비게 됨.
+                // 만약 꽉 채우고 싶다면 weight가 있으므로 1, 2번만 켜면 반반씩 차지함.
+            }
+            // 3개일 때: 다 켜고 구분선 2개 켬
+            else {
+                setPlantView(views, itemViews[0], itemsToShow[0])
+                views.setViewVisibility(R.id.widget_divider_1, View.VISIBLE)
+                setPlantView(views, itemViews[1], itemsToShow[1])
+                views.setViewVisibility(R.id.widget_divider_2, View.VISIBLE)
+                setPlantView(views, itemViews[2], itemsToShow[2])
             }
         }
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    private suspend fun setPlantView(views: RemoteViews, viewId: Int, viewIds: Pair<Int, Int>, item: PlantItem) {
-        views.setViewVisibility(viewId, View.VISIBLE)
-        views.setTextViewText(viewIds.second, item.nickname)
+    private suspend fun setPlantView(views: RemoteViews, ids: List<Int>, item: PlantItem) {
+        val groupId = ids[0]
+        val imageId = ids[1]
+        val nameId = ids[2]
+        val reasonId = ids[3]
+
+        views.setViewVisibility(groupId, View.VISIBLE)
+        views.setTextViewText(nameId, item.nickname)
+
+        val (reasonText, textColor) = getReasonInfo(item.attentionReasons)
+        views.setTextViewText(reasonId, reasonText)
+        views.setTextColor(reasonId, textColor)
 
         try {
             val bitmap = loadBitmapForWidget(item.imageUri)
-            views.setImageViewBitmap(viewIds.first, bitmap)
+            views.setImageViewBitmap(imageId, bitmap)
         } catch (e: Exception) {
-            views.setImageViewResource(viewIds.first, R.drawable.plant1)
+            views.setImageViewResource(imageId, R.drawable.plant1)
         }
 
         val homeIntent = getPendingHomeIntent()
-        views.setOnClickPendingIntent(viewId, homeIntent)
+        views.setOnClickPendingIntent(groupId, homeIntent)
+    }
+
+    private fun getReasonInfo(reasons: String?): Pair<String, Int> {
+        if (reasons.isNullOrEmpty()) return Pair("", Color.GRAY)
+        val firstReason = reasons.split(",").firstOrNull() ?: return Pair("", Color.GRAY)
+
+        return when (firstReason) {
+            "WATER" -> Pair("💧 물 주기", Color.parseColor("#2196F3"))
+            "PESTICIDE" -> Pair("🐛 살충제", Color.parseColor("#F2A74B"))
+            "TEMP" -> Pair("🌡️ 온도 경고", Color.parseColor("#E36161"))
+            else -> Pair("", Color.GRAY)
+        }
     }
 
     private fun getPendingHomeIntent(): PendingIntent {

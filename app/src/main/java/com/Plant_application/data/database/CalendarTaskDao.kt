@@ -10,7 +10,7 @@ import androidx.room.Update
 @Dao
 interface CalendarTaskDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(task: CalendarTask)
+    fun insert(task: CalendarTask): Long
 
     @Update
     fun update(task: CalendarTask)

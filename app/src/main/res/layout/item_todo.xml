@@ -3,18 +3,52 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/card_container"
+    android:background="@drawable/bg_todo_item"
     android:orientation="horizontal"
     android:paddingVertical="12dp"
     android:paddingHorizontal="16dp"
     android:layout_marginBottom="8dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
-    <CheckBox
-        android:id="@+id/checkbox_todo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:buttonTint="@color/card_accent"/>
+    <FrameLayout
+        android:id="@+id/layout_checkbox"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="8dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- 흰 동그라미 배경 -->
+        <ImageView
+            android:id="@+id/iv_checkbox_bg"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:src="@drawable/bg_white_circle" />
+
+        <!-- 체크 모양 -->
+        <ImageView
+            android:id="@+id/iv_check"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="-10dp"
+            android:layout_marginLeft="4dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_check"
+            android:visibility="gone" />
+
+        <!-- 클릭용 체크박스 (버튼 숨기기) -->
+        <CheckBox
+            android:id="@+id/checkbox_todo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:button="@null"
+            android:background="@android:color/transparent"/>
+    </FrameLayout>
+
+
 
     <TextView
         android:id="@+id/tv_todo_title"

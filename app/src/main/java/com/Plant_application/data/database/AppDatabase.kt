@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-@Database(entities = [PlantItem::class, CalendarTask::class, DiaryEntry::class], version = 5, exportSchema = false)
+@Database(entities = [PlantItem::class, CalendarTask::class, DiaryEntry::class], version = 6, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun plantDao(): PlantDao

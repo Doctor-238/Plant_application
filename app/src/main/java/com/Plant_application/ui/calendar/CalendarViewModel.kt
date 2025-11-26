@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.CalendarTask
 import com.Plant_application.data.database.CalendarTaskDao
+import com.Plant_application.data.database.DiaryEntry
 import com.Plant_application.data.database.DiaryEntryDao
 import com.Plant_application.data.database.PlantItem
 import com.Plant_application.data.database.TaskType
@@ -203,6 +204,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             val plantId = task.plantId
             val currentTime = System.currentTimeMillis()
 
+            // 식물과 관련 없는 태스크는 상태만 업데이트
             if (plantId == null) {
                 if (task.taskType == TaskType.CUSTOM) {
                     val updatedTask = task.copy(isCompleted = isChecked)
@@ -238,14 +240,18 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     else -> plant
                 }
 
-                diaryDao.insert(
-                    com.Plant_application.data.database.DiaryEntry(
-                        plantId = plantId,
-                        timestamp = currentTime,
-                        content = diaryContent,
-                        linkedTaskId = task.id
+                // 중요: 일지가 이미 존재하는지 확인하여 중복 생성 방지
+                val diaryExists = diaryDao.existsByTaskId(task.id)
+                if (!diaryExists) {
+                    diaryDao.insert(
+                        DiaryEntry(
+                            plantId = plantId,
+                            timestamp = currentTime,
+                            content = diaryContent,
+                            linkedTaskId = task.id
+                        )
                     )
-                )
+                }
 
             } else {
                 updatedTask.isCompleted = false
@@ -254,8 +260,14 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     TaskType.PESTICIDE -> plant.copy(lastPesticideTimestamp = updatedTask.previousTimestamp)
                     else -> plant
                 }
-                diaryDao.deleteByLinkedTaskId(task.id)
+
+                // 체크 해제 시: 커스텀 일정(사용자 작성)은 일지 삭제 안 함.
+                // 시스템 일정(물주기, 살충제)만 일지 삭제.
+                if (task.taskType != TaskType.CUSTOM) {
+                    diaryDao.deleteByLinkedTaskId(task.id)
+                }
             }
+
             plantRepository.updatePlant(updatedPlant)
             taskDao.update(updatedTask)
             triggerSync()
@@ -277,13 +289,25 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             } else {
                 plantIds.forEach { plantId ->
                     val plant = plantRepository.getPlantByIdSnapshot(plantId)
+                    val taskTitle = "${plant?.nickname ?: ""} - $title"
                     val task = CalendarTask(
                         plantId = plantId,
                         taskType = TaskType.CUSTOM,
-                        title = "${plant?.nickname ?: ""} - $title",
+                        title = taskTitle,
                         dueDate = date
                     )
-                    taskDao.insert(task)
+                    val taskId = taskDao.insert(task)
+
+                    // 식물 일지에도 자동 추가 (이미 존재하면 insertSafe처럼 동작하진 않지만 insert는 기본적으로 새 row 생성)
+                    // 여기서 insert를 하면 일지가 하나 생김.
+                    diaryDao.insert(
+                        DiaryEntry(
+                            plantId = plantId,
+                            timestamp = System.currentTimeMillis(),
+                            content = title,
+                            linkedTaskId = taskId
+                        )
+                    )
                 }
             }
             triggerSync()

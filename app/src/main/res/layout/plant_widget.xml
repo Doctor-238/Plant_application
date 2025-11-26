@@ -4,16 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/bg_bottom_nav_bar"
-    android:padding="8dp">
+    android:background="@drawable/bg_widget"
+    android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="2dp">
+        android:paddingStart="4dp"
+        android:paddingEnd="0dp"
+        android:layout_marginBottom="8dp">
 
         <TextView
             android:id="@+id/tv_widget_weather_summary"
@@ -22,15 +23,17 @@
             android:layout_weight="1"
             android:text="날씨 정보 로딩 중..."
             android:textColor="@color/nav_icon"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/iv_widget_refresh"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@drawable/ic_widget_refresh"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
+            android:contentDescription="새로고침"
+            android:scaleType="centerInside"
             />
     </LinearLayout>
 
@@ -47,31 +50,157 @@
             android:gravity="center"
             android:baselineAligned="false">
 
-            <include
-                android:id="@+id/widget_plant_1"
-                layout="@layout/plant_widget_item_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <LinearLayout
+                android:id="@+id/widget_plant_group_1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingHorizontal="2dp"
                 android:visibility="gone"
-                tools:visibility="visible" />
+                tools:visibility="visible">
 
-            <include
-                android:id="@+id/widget_plant_2"
-                layout="@layout/plant_widget_item_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:visibility="gone"
-                tools:visibility="visible" />
+                <ImageView
+                    android:id="@+id/iv_widget_plant_1"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/plant2" />
 
-            <include
-                android:id="@+id/widget_plant_3"
-                layout="@layout/plant_widget_item_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                <TextView
+                    android:id="@+id/tv_widget_plant_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="식물 이름"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/tv_widget_reason_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="💧 물 주기"
+                    android:textColor="@color/error_red"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/widget_divider_1"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginVertical="8dp"
+                android:background="#D1C6A3"
                 android:visibility="gone"
-                tools:visibility="visible" />
+                tools:visibility="visible"
+                tools:ignore="ContentDescription" />
+
+            <LinearLayout
+                android:id="@+id/widget_plant_group_2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingHorizontal="2dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/iv_widget_plant_2"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/plant2" />
+
+                <TextView
+                    android:id="@+id/tv_widget_plant_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="식물 이름"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/tv_widget_reason_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="🐛 살충제"
+                    android:textColor="@color/error_red"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/widget_divider_2"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginVertical="8dp"
+                android:background="#D1C6A3"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:ignore="ContentDescription" />
+
+            <LinearLayout
+                android:id="@+id/widget_plant_group_3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingHorizontal="2dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/iv_widget_plant_3"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/plant2" />
+
+                <TextView
+                    android:id="@+id/tv_widget_plant_3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="식물 이름"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/tv_widget_reason_3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="🌡️ 온도 경고"
+                    android:textColor="@color/error_red"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
 
         </LinearLayout>
 

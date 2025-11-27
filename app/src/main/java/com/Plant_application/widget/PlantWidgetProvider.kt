@@ -25,7 +25,8 @@ class PlantWidgetProvider : AppWidgetProvider() {
     ) {
         for (appWidgetId in appWidgetIds) {
             try {
-                startOneTimeWork(context, appWidgetId)
+                // 수정: 위젯 추가 시 바로 새로고침 UI 보여주고 작업 시작 (true 전달)
+                startOneTimeWork(context, appWidgetId, true)
             } catch (t: Throwable) {
                 Log.e("PlantWidgetProvider", "onUpdate failed for widget $appWidgetId", t)
                 handleWidgetError(context, appWidgetId)
@@ -58,7 +59,12 @@ class PlantWidgetProvider : AppWidgetProvider() {
         if (isRefresh) {
             val views = RemoteViews(context.packageName, R.layout.plant_widget)
             views.setTextViewText(R.id.tv_widget_weather_summary, "새로고침 중...")
-            AppWidgetManager.getInstance(context).partiallyUpdateAppWidget(appWidgetId, views)
+
+            // 추가: 로딩 상태에서도 새로고침 버튼이 동작하도록 설정
+            setupClickIntents(context, appWidgetId, views)
+
+            // partiallyUpdateAppWidget 대신 updateAppWidget 사용으로 전체 뷰 갱신 보장
+            AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, views)
         }
 
         val workRequest = OneTimeWorkRequestBuilder<PlantUpdateWorker>()

@@ -17,6 +17,7 @@ import com.Plant_application.data.database.TaskType
 import com.Plant_application.data.repository.PlantRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -204,7 +205,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             val plantId = task.plantId
             val currentTime = System.currentTimeMillis()
 
-            // 식물과 관련 없는 태스크는 상태만 업데이트
             if (plantId == null) {
                 if (task.taskType == TaskType.CUSTOM) {
                     val updatedTask = task.copy(isCompleted = isChecked)
@@ -240,7 +240,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     else -> plant
                 }
 
-                // 중요: 일지가 이미 존재하는지 확인하여 중복 생성 방지
                 val diaryExists = diaryDao.existsByTaskId(task.id)
                 if (!diaryExists) {
                     diaryDao.insert(
@@ -261,8 +260,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     else -> plant
                 }
 
-                // 체크 해제 시: 커스텀 일정(사용자 작성)은 일지 삭제 안 함.
-                // 시스템 일정(물주기, 살충제)만 일지 삭제.
                 if (task.taskType != TaskType.CUSTOM) {
                     diaryDao.deleteByLinkedTaskId(task.id)
                 }
@@ -298,8 +295,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     )
                     val taskId = taskDao.insert(task)
 
-                    // 식물 일지에도 자동 추가 (이미 존재하면 insertSafe처럼 동작하진 않지만 insert는 기본적으로 새 row 생성)
-                    // 여기서 insert를 하면 일지가 하나 생김.
                     diaryDao.insert(
                         DiaryEntry(
                             plantId = plantId,
@@ -332,10 +327,12 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun deleteSelectedTasks() {
+        val ids = _selectedItems.value ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            val ids = _selectedItems.value ?: return@launch
             ids.forEach { taskDao.deleteById(it) }
-            exitDeleteMode()
+            withContext(Dispatchers.Main) {
+                exitDeleteMode()
+            }
             triggerSync()
         }
     }

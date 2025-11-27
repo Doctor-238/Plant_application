@@ -14,6 +14,7 @@ import com.Plant_application.data.database.DiaryEntryDao
 import com.Plant_application.data.database.TaskType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 class DiaryListViewModel(application: Application) : AndroidViewModel(application) {
@@ -100,7 +101,9 @@ class DiaryListViewModel(application: Application) : AndroidViewModel(applicatio
                 }
                 diaryDao.deleteById(entry.id)
             }
-            exitDeleteMode()
+            withContext(Dispatchers.Main) {
+                exitDeleteMode()
+            }
         }
     }
 }

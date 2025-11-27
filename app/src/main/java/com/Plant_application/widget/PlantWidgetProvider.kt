@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.Plant_application.R
@@ -25,7 +26,6 @@ class PlantWidgetProvider : AppWidgetProvider() {
     ) {
         for (appWidgetId in appWidgetIds) {
             try {
-                // 수정: 위젯 추가 시 바로 새로고침 UI 보여주고 작업 시작 (true 전달)
                 startOneTimeWork(context, appWidgetId, true)
             } catch (t: Throwable) {
                 Log.e("PlantWidgetProvider", "onUpdate failed for widget $appWidgetId", t)
@@ -60,14 +60,15 @@ class PlantWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.plant_widget)
             views.setTextViewText(R.id.tv_widget_weather_summary, "새로고침 중...")
 
-            // 추가: 로딩 상태에서도 새로고침 버튼이 동작하도록 설정
+            // 로딩 중에도 새로고침 버튼 동작하도록 설정
             setupClickIntents(context, appWidgetId, views)
 
-            // partiallyUpdateAppWidget 대신 updateAppWidget 사용으로 전체 뷰 갱신 보장
             AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, views)
         }
 
+        // 수정: setExpedited를 사용하여 작업 우선순위를 높임 (즉시 실행 요청)
         val workRequest = OneTimeWorkRequestBuilder<PlantUpdateWorker>()
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .setInputData(workDataOf(AppWidgetManager.EXTRA_APPWIDGET_ID to appWidgetId))
             .build()
         WorkManager.getInstance(context).enqueue(workRequest)

@@ -1,6 +1,7 @@
 package com.Plant_application.ui.home
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,6 +11,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -20,6 +22,11 @@ import androidx.navigation.fragment.findNavController
 import com.Plant_application.R
 import com.Plant_application.data.database.PlantItem
 import com.Plant_application.databinding.FragmentHomeBinding
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.Priority
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,6 +42,17 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private var toast: Toast? = null
     private var locationDialog: AlertDialog? = null
 
+    private val resolutionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            homeViewModel.refreshData()
+        } else {
+            homeViewModel.stopLoading()
+            showTurnOnLocationDialog()
+        }
+    }
+
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -42,11 +60,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         if (isGranted) {
             checkAndRefresh()
         } else {
-            homeViewModel.stopLoading()
-            if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                showGoToSettingsDialog()
-            } else {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 showToast("위치 권한이 거부되어 날씨 정보를 가져올 수 없습니다.")
+                homeViewModel.stopLoading()
+            } else {
+                showGoToSettingsDialog()
+                homeViewModel.stopLoading()
             }
         }
     }
@@ -66,7 +85,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     override fun onResume() {
         super.onResume()
-        checkAndRefresh()
+        if (homeViewModel.isLoading.value != true) {
+            checkAndRefresh()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -205,13 +226,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             return
         }
 
-        val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            homeViewModel.stopLoading()
-            showTurnOnLocationDialog()
-            return
-        }
-
         val apiKey = getString(R.string.openweathermap_api_key)
         if (apiKey.isBlank() || apiKey == "YOUR_OPENWEATHERMAP_API_KEY") {
             showToast("날씨 API 키가 설정되지 않았습니다.")
@@ -219,7 +233,33 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             return
         }
 
-        homeViewModel.refreshData()
+        checkLocationSettingsAndLoad()
+    }
+
+    private fun checkLocationSettingsAndLoad() {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(requireContext())
+        val task = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            homeViewModel.refreshData()
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    val intentSenderRequest = IntentSenderRequest.Builder(exception.resolution).build()
+                    resolutionLauncher.launch(intentSenderRequest)
+                } catch (sendEx: Exception) {
+                    homeViewModel.stopLoading()
+                    showTurnOnLocationDialog()
+                }
+            } else {
+                homeViewModel.stopLoading()
+                showTurnOnLocationDialog()
+            }
+        }
     }
 
     private fun requestLocationPermission() {
@@ -241,8 +281,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 }
                 .show()
         } else {
-            homeViewModel.permissionRequestedThisSession = true
-            locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            if (!homeViewModel.permissionRequestedThisSession) {
+                homeViewModel.permissionRequestedThisSession = true
+                locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            } else {
+                homeViewModel.stopLoading()
+            }
         }
     }
 

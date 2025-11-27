@@ -85,28 +85,39 @@ class PlantUpdateWorker(private val context: Context, workerParams: WorkerParame
             }
 
             val allPlants = plantRepository.getAllPlantsList()
-            val notificationsToSend = mutableMapOf<String, MutableSet<String>>()
             val now = System.currentTimeMillis()
 
             for (plant in allPlants) {
                 val reasons = mutableSetOf<String>()
+                val notifReasons = mutableListOf<String>()
 
                 val (needsWater, waterNotif) = checkWatering(plant, now)
                 if (needsWater) reasons.add("WATER")
-                if (waterNotif) notificationsToSend.getOrPut(plant.nickname) { mutableSetOf() }.add("물 주기")
+                if (waterNotif) notifReasons.add("물 주기")
 
                 val (needsPesticide, pesticideNotif) = checkPesticide(plant, now)
                 if (needsPesticide) reasons.add("PESTICIDE")
-                if (pesticideNotif) notificationsToSend.getOrPut(plant.nickname) { mutableSetOf() }.add("살충제")
+                if (pesticideNotif) notifReasons.add("살충제")
 
                 val (tempMismatch, tempNotif) = checkTemperature(plant, relevantForecasts)
                 if (tempMismatch) reasons.add("TEMP")
-                if (tempNotif) notificationsToSend.getOrPut(plant.nickname) { mutableSetOf() }.add("온도 경고")
+                if (tempNotif) notifReasons.add("온도 경고")
 
                 updatePlantInDb(plant, reasons, now)
+
+                // 식물별로 개별 알림 발송
+                if (notifReasons.isNotEmpty()) {
+                    NotificationHelper.sendPlantCareNotification(
+                        context,
+                        plant.id,
+                        "식물 관리 알림: ${plant.nickname}",
+                        "${plant.nickname}에게 필요한 조치: ${notifReasons.joinToString(", ")}",
+                        needsWater = waterNotif,
+                        needsPesticide = pesticideNotif
+                    )
+                }
             }
 
-            sendNotifications(notificationsToSend)
             updateAllAppWidgets(weatherSummaryText)
 
             return Result.success()
@@ -232,17 +243,6 @@ class PlantUpdateWorker(private val context: Context, workerParams: WorkerParame
         }
     }
 
-    private fun sendNotifications(notificationsToSend: Map<String, Set<String>>) {
-        if (notificationsToSend.isEmpty()) return
-
-        val title = "식물 관리 알림"
-        val content = notificationsToSend.map { (plantName, reasons) ->
-            "$plantName: ${reasons.joinToString(", ")}"
-        }.joinToString("\n")
-
-        NotificationHelper.sendPlantCareNotification(context, title, content)
-    }
-
     private suspend fun updateAllAppWidgets(weatherSummary: String) {
         val componentName = ComponentName(context, PlantWidgetProvider::class.java)
         val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
@@ -261,7 +261,6 @@ class PlantUpdateWorker(private val context: Context, workerParams: WorkerParame
 
         PlantWidgetProvider.setupClickIntents(context, appWidgetId, views)
 
-        // 초기화: 식물 그룹과 구분선 모두 숨김
         val plantGroups = listOf(R.id.widget_plant_group_1, R.id.widget_plant_group_2, R.id.widget_plant_group_3)
         plantGroups.forEach { views.setViewVisibility(it, View.GONE) }
 
@@ -277,29 +276,20 @@ class PlantUpdateWorker(private val context: Context, workerParams: WorkerParame
 
             val itemsToShow = plants.take(3)
 
-            // 4개의 ID: (Container, Image, Name, Reason)
             val itemViews = listOf(
                 listOf(R.id.widget_plant_group_1, R.id.iv_widget_plant_1, R.id.tv_widget_plant_1, R.id.tv_widget_reason_1),
                 listOf(R.id.widget_plant_group_2, R.id.iv_widget_plant_2, R.id.tv_widget_plant_2, R.id.tv_widget_reason_2),
                 listOf(R.id.widget_plant_group_3, R.id.iv_widget_plant_3, R.id.tv_widget_plant_3, R.id.tv_widget_reason_3)
             )
 
-            // 1개일 때: 가운데(2번) 표시, 구분선 없음
             if (itemsToShow.size == 1) {
                 setPlantView(views, itemViews[1], itemsToShow[0])
             }
-            // 2개일 때: 양옆(1번, 3번) 표시, 가운데 구분선(1번, 2번 중 하나) 표시
-            // 여기서는 위젯 레이아웃 구조상 1번과 2번 슬롯을 채우고 사이 구분선(divider_1)을 켜는 게 자연스러움.
-            // 하지만 기존 로직(양끝 배치)을 유지하려면: 1번 그룹, 구분선1(숨김), 2번 그룹(비움), 구분선2(숨김), 3번 그룹 사용 -> 가운데가 빔.
-            // 요청하신 대로 "구분선"이 있으려면 붙여서 배치하는 게 좋으므로 1번, 2번 슬롯을 사용하겠습니다.
             else if (itemsToShow.size == 2) {
-                setPlantView(views, itemViews[0], itemsToShow[0]) // 왼쪽
-                views.setViewVisibility(R.id.widget_divider_1, View.VISIBLE) // 구분선
-                setPlantView(views, itemViews[1], itemsToShow[1]) // 가운데(사실상 오른쪽 역할)
-                // 이렇게 하면 1, 2번 위치에 뜨고 3번은 비게 됨.
-                // 만약 꽉 채우고 싶다면 weight가 있으므로 1, 2번만 켜면 반반씩 차지함.
+                setPlantView(views, itemViews[0], itemsToShow[0])
+                views.setViewVisibility(R.id.widget_divider_1, View.VISIBLE)
+                setPlantView(views, itemViews[1], itemsToShow[1])
             }
-            // 3개일 때: 다 켜고 구분선 2개 켬
             else {
                 setPlantView(views, itemViews[0], itemsToShow[0])
                 views.setViewVisibility(R.id.widget_divider_1, View.VISIBLE)

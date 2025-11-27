@@ -7,6 +7,7 @@
     android:background="@color/background_main"
     tools:context=".ui.calendar.CalendarFragment">
 
+    <!-- 🔽 기존 toolbar 그대로 유지 -->
     <FrameLayout
         android:id="@+id/toolbar_container"
         android:layout_width="0dp"
@@ -86,6 +87,22 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </FrameLayout>
 
+
+    <View
+        android:id="@+id/bg_todo_back"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="7dp"
+        android:layout_marginTop="345dp"
+        android:background="@drawable/bg_second_background"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_container"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+    <!-- 🔽 기존 ScrollView 그대로 유지 -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -98,15 +115,17 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="80dp"> <CalendarView
-            android:id="@+id/calendarView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:background="@color/background_surface"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:paddingBottom="80dp">
+
+            <CalendarView
+                android:id="@+id/calendarView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:background="@color/background_surface"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/tv_todo_title"
@@ -152,6 +171,8 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
+
+    <!-- 🔽 FAB도 그대로 유지 -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_todo"
         android:layout_width="wrap_content"

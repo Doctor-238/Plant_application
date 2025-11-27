@@ -7,6 +7,7 @@
     <color name="background_main">#F4EDDD</color>
     <color name="background_surface">#FDFBF2</color>
     <color name="background">#F4EDDD</color>
+    <color name="second_background">#B79C7C</color>
 
     <color name="card_container">#D9EBCE</color>
     <color name="card_accent">#79AC78</color>

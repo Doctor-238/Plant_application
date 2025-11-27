@@ -1,17 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/beige_dark" />
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 위쪽 두 모서리만 둥글게 -->
-    <corners
-        android:topLeftRadius="24dp"
-        android:topRightRadius="24dp"
-        android:bottomLeftRadius="0dp"
-        android:bottomRightRadius="0dp" />
+    <!-- 🔥 그림자(Shadow) Layer -->
+    <item
+        android:left="4dp"
+        android:right="4dp"
+        android:top="2dp"
+        android:bottom="14dp"> <!-- bottom을 크게 하면 그림자가 아래로 퍼짐 -->
+        <shape android:shape="rectangle">
+            <solid android:color="#33000000" /> <!-- 그림자 색상 (20% 투명) -->
+            <corners
+                android:topLeftRadius="24dp"
+                android:topRightRadius="24dp"
+                android:bottomLeftRadius="24dp"
+                android:bottomRightRadius="24dp" />
+        </shape>
+    </item>
 
-    <padding
-        android:left="16dp"
-        android:top="16dp"
-        android:right="16dp"
-        android:bottom="16dp" />
-</shape>
+    <!-- 🔥 기존 그림자 + 배경(그림자 2차 강화) -->
+    <item
+        android:left="0dp"
+        android:right="0dp"
+        android:top="0dp"
+        android:bottom="12dp">
+        <shape>
+            <solid android:color="#55000000" />
+            <corners
+                android:topLeftRadius="24dp"
+                android:topRightRadius="24dp" />
+        </shape>
+    </item>
+
+    <!-- 🔥 실제 카드 배경 -->
+    <item>
+        <shape>
+            <solid android:color="@color/second_background" />
+            <corners
+                android:topLeftRadius="24dp"
+                android:topRightRadius="24dp" />
+            <padding
+                android:left="16dp"
+                android:top="16dp"
+                android:right="16dp"
+                android:bottom="16dp" />
+        </shape>
+    </item>
+
+</layer-list>
+
+

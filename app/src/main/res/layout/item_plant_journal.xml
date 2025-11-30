@@ -55,13 +55,12 @@
             style="?android:attr/ratingBarStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="6dp"
             android:isIndicator="true"
             android:numStars="5"
             android:progressTint="@color/card_accent"
             android:stepSize="0.5"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="@id/tv_watering_info"
             app:layout_constraintTop_toBottomOf="@id/tv_watering_info" />
 
@@ -76,6 +75,54 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:src="@drawable/ic_checkbox_unchecked_custom"
             tools:visibility="visible" />
+
+
+        <LinearLayout
+            android:id="@+id/layout_dairy"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="5dp"
+            android:background="@drawable/bg_tip_bar"
+            app:layout_constraintTop_toBottomOf="@id/ratingBar_health"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+
+        <LinearLayout
+                android:id="@+id/layout_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_dairy_check"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:layout_weight="1"
+                android:includeFontPadding="false"
+                android:minHeight="0dp"
+                android:paddingVertical="4dp"
+                android:paddingHorizontal="4dp"
+                android:text="🗒️ 식물 일지"
+                android:textColor="@android:color/black"
+                android:textSize="12sp"
+                app:backgroundTint="@android:color/transparent"
+                app:cornerRadius="8dp"
+                app:strokeColor="#A3C9A8"
+                app:strokeWidth="1dp" />
+
+        </LinearLayout>
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

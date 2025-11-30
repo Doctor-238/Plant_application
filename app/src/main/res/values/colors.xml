@@ -7,7 +7,7 @@
     <color name="background_main">#F4EDDD</color>
     <color name="background_surface">#FDFBF2</color>
     <color name="background">#F4EDDD</color>
-    <color name="second_background">#B79C7C</color>
+    <color name="second_background">#e6dfc6</color>
 
     <color name="card_container">#D9EBCE</color>
     <color name="card_accent">#79AC78</color>
@@ -43,7 +43,7 @@
     <color name="clothing_item_border">#E0E0E0</color>
     <color name="divider">#D1C6A3</color>
 
-    <color name="card_background_light_green">#E6F5E7</color>
+    <color name="card_background_light_green">#d9ebce</color>
 
     <color name="gauge_water_blue">#2196F3</color>
     <color name="gauge_water_blue_light">#64B5F6</color>

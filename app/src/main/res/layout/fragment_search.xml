@@ -38,7 +38,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <!-- 🔥 bg_second_area: 제목 아래부터 화면 전체 덮는 배경 -->
+                <!-- 배경 -->
                 <View
                     android:id="@+id/bg_second_area"
                     android:layout_width="0dp"
@@ -50,7 +50,6 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
-
 
                 <!-- ProgressBar -->
                 <ProgressBar
@@ -78,32 +77,47 @@
                     tools:text="오류 메시지"
                     tools:visibility="visible"/>
 
+                <!-- 🔥 더 크고 선명한 헤더 텍스트 -->
+                <TextView
+                    android:id="@+id/tv_recommend_intro"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="24dp"
+                    android:text="이런 식물들은 어떠세요?"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.02"
+                    app:layout_constraintTop_toBottomOf="@id/tv_recommendation_error"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
 
-                <!-- 🔥 카드 1: 배경에서 30dp 아래에 오도록 수정 -->
+                <!-- 카드 1 -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_survey_rec"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="30dp"
+                    android:layout_marginTop="16dp"
                     android:visibility="gone"
-                    app:cardCornerRadius="12dp"
+                    app:cardCornerRadius="14dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/bg_second_area"
+                    app:layout_constraintTop_toBottomOf="@id/tv_recommend_intro"
                     tools:visibility="visible">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="14dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="내 환경설정 기반 추천"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <ImageView
@@ -111,7 +125,7 @@
                             android:layout_width="120dp"
                             android:layout_height="120dp"
                             android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="10dp"
                             android:scaleType="centerCrop"
                             tools:src="@drawable/plant2" />
 
@@ -120,7 +134,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:textSize="16sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
                             tools:text="몬스테라" />
 
@@ -129,16 +143,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:layout_marginTop="4dp"
-                            android:textSize="12sp"
+                            android:layout_marginTop="6dp"
+                            android:textSize="13sp"
                             android:lineSpacingMultiplier="1.2"
                             tools:text="물: 4-7일\n온도: 18-25°C\n살충제: 30-60일\n수명: 5-10년" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-
-                <!-- 🔥 카드 2: 카드1 바로 아래 -->
+                <!-- 카드 2 -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_weather_rec"
                     android:layout_width="0dp"
@@ -146,7 +159,7 @@
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="16dp"
                     android:visibility="gone"
-                    app:cardCornerRadius="12dp"
+                    app:cardCornerRadius="14dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/card_survey_rec"
@@ -156,13 +169,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="14dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="현재 날씨 기반 추천"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <ImageView
@@ -170,7 +183,7 @@
                             android:layout_width="120dp"
                             android:layout_height="120dp"
                             android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="10dp"
                             android:scaleType="centerCrop"
                             tools:src="@drawable/plant1" />
 
@@ -179,7 +192,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:textSize="16sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
                             tools:text="스파티필룸" />
 
@@ -188,8 +201,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:layout_marginTop="4dp"
-                            android:textSize="12sp"
+                            android:layout_marginTop="6dp"
+                            android:textSize="13sp"
                             android:lineSpacingMultiplier="1.2"
                             tools:text="물: 3-5일\n온도: 16-22°C\n살충제: 0-0일\n수명: 3-5년" />
 
@@ -197,9 +210,7 @@
                 </com.google.android.material.card.MaterialCardView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
-
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>
-
 

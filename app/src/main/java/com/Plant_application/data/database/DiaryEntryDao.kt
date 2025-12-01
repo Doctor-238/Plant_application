@@ -21,4 +21,7 @@ interface DiaryEntryDao {
 
     @Query("DELETE FROM diary_entries WHERE plantId = :plantId AND content = :content AND timestamp = :timestamp")
     suspend fun deleteManualEntry(plantId: Int, content: String, timestamp: Long)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM diary_entries WHERE linkedTaskId = :taskId LIMIT 1)")
+    suspend fun existsByTaskId(taskId: Long): Boolean
 }

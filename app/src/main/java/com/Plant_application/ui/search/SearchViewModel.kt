@@ -25,6 +25,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -41,6 +42,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _isLoadingRecommendations = MutableLiveData(false)
     val isLoadingRecommendations: LiveData<Boolean> = _isLoadingRecommendations
+
+    private val _surveyError = MutableLiveData<String?>(null)
+    private val _weatherError = MutableLiveData<String?>(null)
 
     private val _recommendationError = MutableLiveData<String?>(null)
     val recommendationError: LiveData<String?> = _recommendationError
@@ -68,6 +72,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         if (_isLoadingRecommendations.value == true) return
         _isLoadingRecommendations.value = true
         _recommendationError.value = null
+        _surveyError.value = null
+        _weatherError.value = null
+        _surveyRecommendation.value = null
+        _weatherRecommendation.value = null
 
         viewModelScope.launch {
             val surveyJob = async(Dispatchers.IO) {
@@ -76,24 +84,32 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                     val sunlight = prefs.surveySunlight
                     val temp = prefs.surveyTemp
                     val humidity = prefs.surveyHumidity
+
                     if (space == -1 || sunlight == -1 || temp == -1 || humidity == -1) {
-                        throw Exception("설문조사 정보가 없습니다. 앱 재설치 후 초기 설문을 진행해주세요.")
+                        throw Exception("설문조사 정보가 없습니다. 초기 설문을 진행해주세요.")
                     }
+
                     val rec = runAiRecommendation(space, sunlight, temp, humidity)
-                    _surveyRecommendation.postValue(rec)
-                    rec?.official_name?.let {
-                        val imageUrl = fetchImageFromWikimedia(it)
-                        _surveyRecommendationImage.postValue(imageUrl)
+                    if (rec != null) {
+                        _surveyRecommendation.postValue(rec)
+                        rec.official_name?.let {
+                            val imageUrl = fetchImageFromWikimedia(it)
+                            _surveyRecommendationImage.postValue(imageUrl)
+                        }
+                    } else {
+                        throw Exception("AI 설문 추천 결과 없음")
                     }
                 } catch (e: Exception) {
                     Log.e("SearchViewModel", "Survey rec failed", e)
-                    _recommendationError.postValue("설문 기반 추천 실패: ${e.message}")
+                    _surveyError.postValue(e.message)
                 }
             }
 
             val weatherJob = async(Dispatchers.IO) {
                 try {
                     val location = getFreshLocation()
+                        ?: throw Exception("위치 정보를 가져올 수 없습니다.")
+
                     val weather = fetchWeather(location)
                     val currentForecast = weather.list.firstOrNull()
                         ?: throw IOException("날씨 예보 정보가 없습니다.")
@@ -105,38 +121,55 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                     val sunlight = prefs.surveySunlight.takeIf { it != -1 } ?: 3
 
                     val rec = runAiRecommendation(space, sunlight, tempRating, humidityRating)
-                    _weatherRecommendation.postValue(rec)
-                    rec?.official_name?.let {
-                        val imageUrl = fetchImageFromWikimedia(it)
-                        _weatherRecommendationImage.postValue(imageUrl)
+                    if (rec != null) {
+                        _weatherRecommendation.postValue(rec)
+                        rec.official_name?.let {
+                            val imageUrl = fetchImageFromWikimedia(it)
+                            _weatherRecommendationImage.postValue(imageUrl)
+                        }
+                    } else {
+                        throw Exception("AI 날씨 추천 결과 없음")
                     }
                 } catch (e: Exception) {
                     Log.e("SearchViewModel", "Weather rec failed", e)
                     val errorMsg = when (e) {
-                        is SecurityException -> "위치 권한이 없어 날씨 추천을 받지 못했습니다."
-                        else -> "날씨 기반 추천 실패: ${e.message}"
+                        is SecurityException -> "위치 권한이 필요합니다."
+                        else -> "날씨 정보를 불러오지 못했습니다."
                     }
-                    _recommendationError.postValue(errorMsg)
+                    _weatherError.postValue(errorMsg)
                 }
             }
 
-            surveyJob.await()
-            weatherJob.await()
+            awaitAll(surveyJob, weatherJob)
+
+            if (_surveyRecommendation.value == null && _weatherRecommendation.value == null) {
+                val surveyMsg = _surveyError.value ?: ""
+                val weatherMsg = _weatherError.value ?: ""
+                _recommendationError.postValue("추천을 가져올 수 없습니다.\n$surveyMsg\n$weatherMsg")
+            }
+
             _isLoadingRecommendations.postValue(false)
         }
     }
 
-    private suspend fun getFreshLocation(): Location {
+    private suspend fun getFreshLocation(): Location? {
         if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             throw SecurityException("No location permission")
         }
-        cancellationTokenSource.cancel()
-        cancellationTokenSource = CancellationTokenSource()
-        return fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-            cancellationTokenSource.token
-        ).await()
+
+        return try {
+            cancellationTokenSource.cancel()
+            cancellationTokenSource = CancellationTokenSource()
+
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                cancellationTokenSource.token
+            ).await()
+        } catch (e: Exception) {
+            Log.e("SearchViewModel", "Location fetch error", e)
+            null
+        }
     }
 
     private suspend fun fetchWeather(location: Location): WeatherResponse {
@@ -233,24 +266,29 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private suspend fun fetchImageFromWikimedia(plantName: String): String? {
         return withContext(Dispatchers.IO) {
             try {
+                // 1. First attempt using getPageSummary (handles redirects well)
                 val summaryResponse = wikimediaApiService.getPageSummary(title = plantName)
                 if (summaryResponse.isSuccessful) {
                     val imageUrl = summaryResponse.body()?.thumbnail?.source
                     if (imageUrl != null) return@withContext imageUrl
                 }
 
+                // 2. Fallback: If summary failed, use the search API
                 Log.w("SearchViewModel", "getPageSummary failed. Falling back to search API.")
                 val searchResponse = wikimediaApiService.searchPages(srsearch = plantName)
                 if (searchResponse.isSuccessful) {
                     val firstTitle = searchResponse.body()?.query?.search?.firstOrNull()?.title
 
                     if (firstTitle != null) {
+                        // 3. Retry getPageSummary with the title from the search result
                         val retryResponse = wikimediaApiService.getPageSummary(title = firstTitle)
                         if (retryResponse.isSuccessful) {
                             return@withContext retryResponse.body()?.thumbnail?.source
                         }
                     }
                 }
+
+                // 4. If all else fails, return null
                 Log.w("SearchViewModel", "All Wikimedia image fetch attempts failed.")
                 null
 

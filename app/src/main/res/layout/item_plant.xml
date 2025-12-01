@@ -51,51 +51,59 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="우리집 몬스테라" />
 
-            <LinearLayout
-                android:id="@+id/ll_attention_reasons"
+            <HorizontalScrollView
+                android:id="@+id/scroll_reasons"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_marginTop="4dp"
+                android:scrollbars="none"
+                android:overScrollMode="never"
                 app:layout_constraintStart_toStartOf="@id/tv_plant_nickname"
                 app:layout_constraintEnd_toEndOf="@id/tv_plant_nickname"
                 app:layout_constraintTop_toBottomOf="@id/tv_plant_nickname">
 
-                <TextView
-                    android:id="@+id/tv_reason_water"
+                <LinearLayout
+                    android:id="@+id/ll_attention_reasons"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💧 물 주기"
-                    android:textColor="@color/gauge_water_blue"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/tv_reason_pesticide"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="🐛 살충제"
-                    android:textColor="@color/gauge_pesticide_orange"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:visibility="visible"/>
+                    <TextView
+                        android:id="@+id/tv_reason_water"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💧 물 주기"
+                        android:textColor="@color/gauge_water_blue"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
-                <TextView
-                    android:id="@+id/tv_reason_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="🌡️ 온도 경고"
-                    android:textColor="@color/error_red"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:visibility="visible"/>
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/tv_reason_pesticide"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="🐛 살충제"
+                        android:textColor="@color/gauge_pesticide_orange"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:visibility="visible"/>
+
+                    <TextView
+                        android:id="@+id/tv_reason_temp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="🌡️ 온도 경고"
+                        android:textColor="@color/error_red"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:visibility="visible"/>
+                </LinearLayout>
+            </HorizontalScrollView>
 
             <TextView
                 android:id="@+id/tv_water_info"
@@ -106,7 +114,7 @@
                 android:textColor="@android:color/black"
                 android:textSize="12sp"
                 app:layout_constraintStart_toStartOf="@id/tv_plant_nickname"
-                app:layout_constraintTop_toBottomOf="@id/ll_attention_reasons" />
+                app:layout_constraintTop_toBottomOf="@id/scroll_reasons" />
 
             <ProgressBar
                 android:id="@+id/pb_water_gauge"

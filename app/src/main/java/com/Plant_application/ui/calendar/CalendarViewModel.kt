@@ -10,12 +10,14 @@ import androidx.lifecycle.viewModelScope
 import com.Plant_application.data.database.AppDatabase
 import com.Plant_application.data.database.CalendarTask
 import com.Plant_application.data.database.CalendarTaskDao
+import com.Plant_application.data.database.DiaryEntry
 import com.Plant_application.data.database.DiaryEntryDao
 import com.Plant_application.data.database.PlantItem
 import com.Plant_application.data.database.TaskType
 import com.Plant_application.data.repository.PlantRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -238,14 +240,17 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     else -> plant
                 }
 
-                diaryDao.insert(
-                    com.Plant_application.data.database.DiaryEntry(
-                        plantId = plantId,
-                        timestamp = currentTime,
-                        content = diaryContent,
-                        linkedTaskId = task.id
+                val diaryExists = diaryDao.existsByTaskId(task.id)
+                if (!diaryExists) {
+                    diaryDao.insert(
+                        DiaryEntry(
+                            plantId = plantId,
+                            timestamp = currentTime,
+                            content = diaryContent,
+                            linkedTaskId = task.id
+                        )
                     )
-                )
+                }
 
             } else {
                 updatedTask.isCompleted = false
@@ -254,8 +259,12 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     TaskType.PESTICIDE -> plant.copy(lastPesticideTimestamp = updatedTask.previousTimestamp)
                     else -> plant
                 }
-                diaryDao.deleteByLinkedTaskId(task.id)
+
+                if (task.taskType != TaskType.CUSTOM) {
+                    diaryDao.deleteByLinkedTaskId(task.id)
+                }
             }
+
             plantRepository.updatePlant(updatedPlant)
             taskDao.update(updatedTask)
             triggerSync()
@@ -277,13 +286,23 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             } else {
                 plantIds.forEach { plantId ->
                     val plant = plantRepository.getPlantByIdSnapshot(plantId)
+                    val taskTitle = "${plant?.nickname ?: ""} - $title"
                     val task = CalendarTask(
                         plantId = plantId,
                         taskType = TaskType.CUSTOM,
-                        title = "${plant?.nickname ?: ""} - $title",
+                        title = taskTitle,
                         dueDate = date
                     )
-                    taskDao.insert(task)
+                    val taskId = taskDao.insert(task)
+
+                    diaryDao.insert(
+                        DiaryEntry(
+                            plantId = plantId,
+                            timestamp = System.currentTimeMillis(),
+                            content = title,
+                            linkedTaskId = taskId
+                        )
+                    )
                 }
             }
             triggerSync()
@@ -308,10 +327,12 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun deleteSelectedTasks() {
+        val ids = _selectedItems.value ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            val ids = _selectedItems.value ?: return@launch
             ids.forEach { taskDao.deleteById(it) }
-            exitDeleteMode()
+            withContext(Dispatchers.Main) {
+                exitDeleteMode()
+            }
             triggerSync()
         }
     }

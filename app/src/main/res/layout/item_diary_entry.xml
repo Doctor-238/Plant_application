@@ -9,10 +9,9 @@
     app:cardElevation="2dp"
     app:cardBackgroundColor="@color/card_container">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:padding="12dp">
 
         <TextView
@@ -21,16 +20,33 @@
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="2025-11-09" />
 
         <TextView
             android:id="@+id/tv_diary_content"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="16sp"
             android:textColor="@color/text_primary"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/iv_delete_checkbox"
+            app:layout_constraintTop_toBottomOf="@id/tv_diary_date"
             tools:text="오늘은 잎사귀가 한 장 더 자랐어요 🌱" />
 
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/iv_delete_checkbox"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_checkbox_unchecked_custom"
+            tools:visibility="visible" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

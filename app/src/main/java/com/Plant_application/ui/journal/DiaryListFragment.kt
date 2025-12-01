@@ -5,7 +5,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -24,6 +27,7 @@ class DiaryListFragment : Fragment(R.layout.item_journal_detail) {
     private val viewModel: DiaryListViewModel by viewModels()
     private val args: DiaryListFragmentArgs by navArgs()
     private lateinit var diaryAdapter: DiaryAdapter
+    private lateinit var onBackPressedCallback: OnBackPressedCallback
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -32,6 +36,7 @@ class DiaryListFragment : Fragment(R.layout.item_journal_detail) {
         setupToolbar()
         setupRecyclerView()
         setupListeners()
+        setupBackButtonHandler()
         observeViewModel()
 
         viewModel.loadEntries(args.plantId)
@@ -49,7 +54,18 @@ class DiaryListFragment : Fragment(R.layout.item_journal_detail) {
     }
 
     private fun setupRecyclerView() {
-        diaryAdapter = DiaryAdapter()
+        diaryAdapter = DiaryAdapter(
+            onItemClick = { entry ->
+                if (viewModel.isDeleteMode.value == true) {
+                    viewModel.toggleItemSelection(entry.id)
+                }
+            },
+            onItemLongClick = { entry ->
+                viewModel.enterDeleteMode(entry.id)
+            },
+            isDeleteMode = { viewModel.isDeleteMode.value ?: false },
+            isSelected = { id -> viewModel.selectedItems.value?.contains(id) ?: false }
+        )
         binding.rvDiaryList.apply {
             adapter = diaryAdapter
             layoutManager = LinearLayoutManager(context).apply {
@@ -68,11 +84,55 @@ class DiaryListFragment : Fragment(R.layout.item_journal_detail) {
                 hideKeyboard()
             }
         }
+
+        binding.ivBackDeleteMode.setOnClickListener {
+            viewModel.exitDeleteMode()
+        }
+
+        binding.btnDelete.setOnClickListener {
+            val count = viewModel.selectedItems.value?.size ?: 0
+            if (count > 0) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("삭제 확인")
+                    .setMessage("${count}개의 일지를 삭제하시겠습니까? (연동된 일정도 삭제됩니다)")
+                    .setPositiveButton("예") { _, _ -> viewModel.deleteSelectedEntries() }
+                    .setNegativeButton("아니오", null)
+                    .show()
+            }
+        }
+    }
+
+    private fun setupBackButtonHandler() {
+        onBackPressedCallback = object : OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                if (viewModel.isDeleteMode.value == true) {
+                    viewModel.exitDeleteMode()
+                } else {
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressedCallback)
     }
 
     private fun observeViewModel() {
         viewModel.diaryEntries.observe(viewLifecycleOwner) { entries ->
             diaryAdapter.submitList(entries)
+        }
+
+        viewModel.isDeleteMode.observe(viewLifecycleOwner) { isDelete ->
+            onBackPressedCallback.isEnabled = isDelete
+            binding.toolbar.isVisible = !isDelete
+            binding.toolbarDelete.isVisible = isDelete
+            binding.layoutInputArea.isVisible = !isDelete // 삭제 모드일 땐 입력창 숨김
+
+            diaryAdapter.notifyItemRangeChanged(0, diaryAdapter.itemCount, "DELETE_MODE_CHANGED")
+        }
+
+        viewModel.selectedItems.observe(viewLifecycleOwner) { selectedIds ->
+            binding.btnDelete.isEnabled = selectedIds.isNotEmpty()
+            diaryAdapter.notifyItemRangeChanged(0, diaryAdapter.itemCount, "SELECTION_CHANGED")
         }
     }
 
@@ -83,6 +143,7 @@ class DiaryListFragment : Fragment(R.layout.item_journal_detail) {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        onBackPressedCallback.remove()
         binding.rvDiaryList.adapter = null
         _binding = null
     }

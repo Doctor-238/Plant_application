@@ -38,6 +38,9 @@
         <action
             android:id="@+id/action_navigation_journal_to_plantDetailFragment"
             app:destination="@id/plantDetailFragment" />
+        <action
+            android:id="@+id/action_navigation_journal_to_diaryListFragment"
+            app:destination="@id/diaryListFragment" />
     </fragment>
 
     <fragment

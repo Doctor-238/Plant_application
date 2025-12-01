@@ -17,6 +17,7 @@ import java.io.File
 class JournalAdapter(
     private val onItemClicked: (PlantItem) -> Unit,
     private val onItemLongClicked: (PlantItem) -> Unit,
+    private val onDiaryClicked: (PlantItem) -> Unit,
     private val isDeleteMode: () -> Boolean,
     private val isItemSelected: (Int) -> Boolean
 ) : ListAdapter<PlantItem, JournalAdapter.PlantViewHolder>(DiffCallback) {
@@ -27,7 +28,7 @@ class JournalAdapter(
     }
 
     override fun onBindViewHolder(holder: PlantViewHolder, position: Int) {
-        holder.bind(getItem(position), onItemClicked, onItemLongClicked, isDeleteMode, isItemSelected)
+        holder.bind(getItem(position), onItemClicked, onItemLongClicked, onDiaryClicked, isDeleteMode, isItemSelected)
     }
 
     override fun onBindViewHolder(holder: PlantViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -46,6 +47,7 @@ class JournalAdapter(
             plant: PlantItem,
             clickAction: (PlantItem) -> Unit,
             longClickAction: (PlantItem) -> Unit,
+            diaryClickAction: (PlantItem) -> Unit,
             isDeleteMode: () -> Boolean,
             isItemSelected: (Int) -> Boolean
         ) {
@@ -61,6 +63,11 @@ class JournalAdapter(
             itemView.setOnLongClickListener {
                 if (!isDeleteMode()) longClickAction(plant)
                 true
+            }
+
+            // 식물 일지 버튼 클릭 리스너 연결
+            binding.btnDairyCheck.setOnClickListener {
+                diaryClickAction(plant)
             }
 
             updateDeleteModeUI(isDeleteMode())

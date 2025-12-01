@@ -37,6 +37,15 @@ class PlantListFragment : Fragment(R.layout.fragment_plant_list) {
                 }
             },
             onItemLongClicked = { longClickedItem -> viewModel.enterDeleteMode(longClickedItem.id) },
+            onDiaryClicked = { plant ->
+                // 식물 일지로 바로 이동
+                val action = JournalFragmentDirections.actionNavigationJournalToDiaryListFragment(
+                    plant.id,
+                    plant.nickname,
+                    plant.imageUri
+                )
+                findNavController().navigate(action)
+            },
             isDeleteMode = { viewModel.isDeleteMode.value ?: false },
             isItemSelected = { itemId -> viewModel.selectedItems.value?.contains(itemId) ?: false }
         )

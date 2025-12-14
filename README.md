@@ -2,7 +2,8 @@
 
 > AI 분석 + 날씨 정보 + 사용자 맞춤 관리 기능을 결합한 스마트 식물 관리 앱
 
-이미지
+<img width="1920" height="1080" alt="planty" src="https://github.com/user-attachments/assets/ceb71881-4d13-450b-90ee-a91e67e5930e" />
+
 
 ## 📌 프로젝트 개요
 
@@ -15,9 +16,18 @@
 
 사용자가 식물 관리 경험을 더 즐겁고 편리하게 할 수 있도록 설계되었습니다.
 
+
+## 📦 설치 파일 다운로드
+
+앱 설치 파일(APK)은 아래 링크에서 다운로드할 수 있습니다.
+
+👉 https://github.com/Doctor-238/Plant_application/releases/download/v1/app-debug.apk
+
+
 ## 📱 실행 데모
 
-이미지
+<img width="1920" height="1080" alt="run" src="https://github.com/user-attachments/assets/52eafcc9-0958-4128-b4d2-5a6671a2a2e3" />
+
 
 ## 🛠 주요 기능
 
@@ -133,5 +143,5 @@
   - UI 디자인
 
 ## 🎨 디자인 원본 (Figma)
-- 피그마 링크
+- https://www.figma.com/design/ZUYdsAmz7DyQVXqUUdHOGL/Untitled?node-id=0-1&t=U4Xlle57Gn0C6SOp-1
 
